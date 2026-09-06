@@ -8,6 +8,8 @@
 :root {
     --bg-color: #f7f8fa;
     --card-bg: #ffffff;
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --input-focus-bg: #ffffff;
     --text-main: #333333;
     --text-muted: #666666;
     --border-color: #eaeaea;
@@ -19,6 +21,8 @@
 body.dark-mode {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-focus-bg: rgba(255, 255, 255, 0.08);
     --text-main: #e0e0e0;
     --text-muted: #aaaaaa;
     --border-color: #2d2d2d;
@@ -50,8 +54,21 @@ a { text-decoration: none; color: inherit; }
 .nav-links a.active { color: var(--primary-red); border-bottom: 2px solid var(--primary-red); padding-bottom: 5px; }
 
 .header-right { display: flex; align-items: center; gap: 15px; }
-.search-box { background-color: var(--bg-color); padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border-color); }
-.search-box input { border: none; background: transparent; outline: none; color: var(--text-main); }
+.search-box { 
+    background-color: var(--input-bg); 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+.search-box:focus-within {
+    border-color: var(--primary-red);
+    background-color: var(--input-focus-bg);
+}
+.search-box input { border: none; background: transparent; outline: none; color: var(--text-main); font-size: 13.5px; }
 
 /* ปุ่มสลับธีม */
 .theme-toggle-btn {
@@ -75,49 +92,94 @@ a { text-decoration: none; color: inherit; }
 .icon-btn { font-size: 18px; cursor: pointer; color: var(--text-muted); transition: transform 0.2s ease; }
 .icon-btn:hover { transform: scale(1.15); }
 
-/* Layouts */
+/* Layouts & Cards Global */
 .container { display: flex; max-width: 1200px; margin: 30px auto; gap: 30px; }
-.sidebar { width: 260px; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px var(--shadow-color); height: fit-content; border: 1px solid var(--border-color); }
+.sidebar { 
+    width: 260px; 
+    background: var(--card-bg); 
+    padding: 22px; 
+    border-radius: 16px; 
+    box-shadow: 0 4px 16px var(--shadow-color); 
+    height: fit-content; 
+    border: 1px solid var(--border-color); 
+}
 .sidebar h3, .sidebar h4 { color: var(--primary-red); }
 .sub-text { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
 
 .category-list { display: flex; flex-direction: column; gap: 8px; }
-.cat-btn { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border: none; background: transparent; border-radius: 8px; cursor: pointer; color: var(--text-muted); width: 100%; text-align: left; }
+.cat-btn { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border: none; background: transparent; border-radius: 10px; cursor: pointer; color: var(--text-muted); width: 100%; text-align: left; transition: all 0.2s; }
+.cat-btn:hover { background: var(--input-bg); color: var(--text-main); }
 .cat-btn.active { background-color: var(--accent-gold); color: #fff; font-weight: bold; }
 
 hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 .price-btn-group { display: flex; gap: 10px; margin-top: 10px; }
-.price-btn { flex: 1; padding: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 6px; cursor: pointer; }
+.price-btn { flex: 1; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
 .price-btn.active { background-color: var(--primary-red); color: #fff; border-color: var(--primary-red); }
 
-.reset-btn { width: 100%; margin-top: 20px; padding: 10px; border: 1px solid var(--primary-red); background: transparent; color: var(--primary-red); border-radius: 8px; cursor: pointer; }
+.reset-btn { width: 100%; margin-top: 20px; padding: 10px; border: 1px solid var(--primary-red); background: transparent; color: var(--primary-red); border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+.reset-btn:hover { background: var(--primary-red); color: #ffffff; }
+
 .content { flex: 1; }
 .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.card { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--border-color); }
+.card { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px var(--shadow-color); border: 1px solid var(--border-color); transition: transform 0.2s; }
+.card:hover { transform: translateY(-3px); }
 .card-image { position: relative; height: 160px; }
 .card-image img { width: 100%; height: 100%; object-fit: cover; }
 
 .badge { position: absolute; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-.badge-rating { top: 10px; left: 10px; background: rgba(255, 255, 255, 0.9); color: #000; }
+.badge-rating { top: 10px; left: 10px; background: rgba(255, 255, 255, 0.9); color: #000; backdrop-filter: blur(4px); }
 .badge-discount { top: 10px; right: 10px; background: var(--accent-gold); color: #fff; }
 
-.card-info { padding: 15px; }
+.card-info { padding: 18px; }
 .card-info h3 { font-size: 16px; margin-bottom: 4px; color: var(--text-main); }
 .card-info .desc { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
 .card-footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
 .price { font-weight: bold; color: var(--accent-gold); }
 
-.btn-primary-red, .load-more-btn { background-color: var(--primary-red); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-align: center; }
+.btn-primary-red, .load-more-btn { background-color: var(--primary-red); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; text-align: center; font-weight: 600; transition: background 0.2s; }
+.btn-primary-red:hover, .load-more-btn:hover { background-color: #8a0014; }
 .load-more-btn { display: block; margin: 30px auto 0; }
 
 .center-body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-color); }
-.login-card { background: var(--card-bg); padding: 40px; border-radius: 16px; width: 400px; text-align: center; box-shadow: 0 4px 20px var(--shadow-color); border: 1px solid var(--border-color); }
+.login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; width: 400px; text-align: center; box-shadow: 0 8px 24px var(--shadow-color); border: 1px solid var(--border-color); }
 .icon-circle { width: 50px; height: 50px; background: var(--primary-red); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; }
 
-.form-group { text-align: left; margin-bottom: 15px; }
-.form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted); }
-.form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); border-radius: 6px; }
+/* ==========================================
+   ปรับปรุง Input Forms ทั่วทั้งเว็บไซต์ให้อ่อนนุ่มขึ้น
+   ========================================== */
+.form-group { text-align: left; margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--text-muted); }
+
+.form-group input,
+.profile-form .form-input,
+.profile-form .form-display-box,
+.review-textarea,
+.filter-group select,
+.add-place-popup input, 
+.add-place-popup select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    border-radius: 10px;
+    font-size: 13.5px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.profile-form .form-input:focus,
+.review-textarea:focus,
+.filter-group select:focus,
+.add-place-popup input:focus, 
+.add-place-popup select:focus {
+    background-color: var(--input-focus-bg);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(168, 0, 24, 0.15);
+}
 
 .footer { background-color: var(--card-bg); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); margin-top: 50px; border-top: 1px solid var(--border-color); }
 .footer-logo { font-weight: bold; color: var(--primary-red); }
@@ -126,22 +188,22 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 .detail-container { max-width: 1100px; margin: 20px auto 40px; padding: 0 20px; }
 .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px; margin-bottom: 15px; }
 .back-link:hover { color: var(--primary-red); }
-.detail-header-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow-color); margin-bottom: 25px; border: 1px solid var(--border-color); }
+.detail-header-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px var(--shadow-color); margin-bottom: 25px; border: 1px solid var(--border-color); }
 .detail-cover { position: relative; width: 100%; height: 380px; }
 .detail-cover img { width: 100%; height: 100%; object-fit: cover; }
-.detail-cover-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: #fff; }
-.detail-tag { background: var(--primary-red); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+.detail-cover-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); color: #fff; }
+.detail-tag { background: var(--primary-red); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
 
 .detail-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 25px; }
-.info-box { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px var(--shadow-color); margin-bottom: 25px; border: 1px solid var(--border-color); }
+.info-box { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px var(--shadow-color); margin-bottom: 25px; border: 1px solid var(--border-color); }
 .info-box h3 { font-size: 18px; color: var(--text-main); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
 
 .hours-list { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .hours-row { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color); }
 
 .popular-menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; }
-.menu-item { text-align: center; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; }
-.menu-item img { width: 100%; height: 85px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; }
+.menu-item { text-align: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; }
+.menu-item img { width: 100%; height: 85px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
 .menu-item p { font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 2px; }
 .menu-item span { font-size: 12px; color: var(--primary-red); font-weight: bold; }
 
@@ -150,8 +212,9 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 .star-rating-input label { color: #ccc; cursor: pointer; transition: color 0.2s; }
 .star-rating-input label:hover, .star-rating-input label:hover ~ label, .star-rating-input input:checked ~ label { color: var(--accent-gold); }
 
-.review-textarea { width: 100%; height: 110px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; resize: none; font-size: 14px; outline: none; background: var(--bg-color); color: var(--text-main); }
-.file-upload-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; color: var(--text-muted); cursor: pointer; margin: 15px 0; background: var(--bg-color); }
+.review-textarea { height: 110px; resize: none; font-size: 14px; }
+.file-upload-box { border: 2px dashed var(--border-color); border-radius: 10px; padding: 20px; text-align: center; color: var(--text-muted); cursor: pointer; margin: 15px 0; background: var(--input-bg); transition: all 0.2s; }
+.file-upload-box:hover { border-color: var(--primary-red); background: var(--input-focus-bg); }
 
 .review-item { padding: 15px 0; border-bottom: 1px solid var(--border-color); }
 .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
@@ -173,13 +236,12 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 #map {
     width: 100%;
     height: 550px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
     z-index: 1;
     transition: cursor 0.2s;
 }
 
-/* แถบควบคุมแผนที่ด้านล่างขวา */
 .map-controls-group {
     position: absolute;
     bottom: 20px;
@@ -192,15 +254,15 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 }
 
 .map-control-btn {
-    background: var(--card-bg, #ffffff);
-    color: var(--text-main, #333333);
-    border: 1px solid var(--border-color, #cccccc);
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
     padding: 10px 18px;
     border-radius: 30px;
     cursor: pointer;
     font-weight: 600;
     font-size: 13px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px var(--shadow-color);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -212,21 +274,19 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
 
-/* ปุ่มสลับโหมดปักหมุด */
 .add-mode-btn.active {
-    background: #e63946 !important;
+    background: var(--primary-red) !important;
     color: #ffffff !important;
-    border-color: #e63946 !important;
+    border-color: var(--primary-red) !important;
     animation: pulse-border 1.5s infinite;
 }
 
 @keyframes pulse-border {
-    0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.5); }
-    70% { box-shadow: 0 0 0 10px rgba(230, 57, 70, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(168, 0, 24, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(168, 0, 24, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(168, 0, 24, 0); }
 }
 
-/* Banner แจ้งเตือนเมื่ออยู่ในโหมดปักหมุด */
 .pin-mode-banner {
     display: none;
     position: absolute;
@@ -234,7 +294,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
-    background: rgba(230, 57, 70, 0.95);
+    background: rgba(168, 0, 24, 0.95);
     color: white;
     padding: 8px 20px;
     border-radius: 20px;
@@ -254,7 +314,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 
 .add-place-popup h4 {
     margin: 0 0 10px 0;
-    color: #e63946;
+    color: var(--primary-red);
     font-size: 14px;
     display: flex;
     align-items: center;
@@ -263,38 +323,24 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 
 .add-place-popup label {
     font-size: 11px;
-    color: #666;
+    color: var(--text-muted);
     display: block;
     margin-bottom: 3px;
-}
-
-.add-place-popup input, .add-place-popup select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 12px;
-    box-sizing: border-box;
-    outline: none;
-}
-
-.add-place-popup input:focus, .add-place-popup select:focus {
-    border-color: #e63946;
 }
 
 .add-place-popup-actions {
     display: flex;
     gap: 6px;
+    margin-top: 4px;
 }
 
 .btn-pop-save {
     flex: 2;
-    background: #e63946;
+    background: var(--primary-red);
     color: white;
     border: none;
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
@@ -306,14 +352,13 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     color: white;
     border: none;
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 12px;
 }
 
-
 /* ==========================================
-   สไตล์เฉพาะสำหรับหน้าสุ่มไพ่ร้านค้า (random.html)
+   ส่วนของ Random Card UI (random.html)
    ========================================== */
 .random-container {
     max-width: 900px;
@@ -324,24 +369,23 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 
 .random-header h1 {
     font-size: 2rem;
-    color: var(--text-main, #333);
+    color: var(--text-main);
     margin-bottom: 8px;
 }
 
 .random-header p {
-    color: var(--text-muted, #666);
+    color: var(--text-muted);
     font-size: 14px;
     margin-bottom: 30px;
 }
 
-/* กล่องตัวกรองก่อนสุ่ม */
 .filter-card {
-    background: var(--card-bg, #ffffff);
-    border: 1px solid var(--border-color, #eee);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px var(--shadow-color);
 }
 
 .filter-options {
@@ -362,17 +406,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 .filter-group label {
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-main, #444);
-}
-
-.filter-group select {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color, #ccc);
-    background: var(--card-bg, #fff);
-    color: var(--text-main, #333);
-    font-size: 14px;
-    outline: none;
+    color: var(--text-main);
 }
 
 /* โซนการ์ดสุ่ม / ไพ่ */
@@ -409,7 +443,6 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     flex-direction: column;
 }
 
-/* ด้านหลังไพ่ (ยังไม่เปิด) */
 .card-front {
     background: linear-gradient(135deg, #c31432, #240b36);
     color: white;
@@ -430,13 +463,12 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     letter-spacing: 1px;
 }
 
-/* ด้านหน้าไพ่ (ผลลัพธ์) */
 .card-back {
-    background: var(--card-bg, #fff);
-    color: var(--text-main, #333);
+    background: var(--card-bg);
+    color: var(--text-main);
     transform: rotateY(180deg);
     text-align: left;
-    border: 1px solid var(--border-color, #eee);
+    border: 1px solid var(--border-color);
 }
 
 .card-back img {
@@ -463,13 +495,13 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     display: flex;
     gap: 12px;
     font-size: 13px;
-    color: var(--text-muted, #777);
+    color: var(--text-muted);
     margin-bottom: 10px;
 }
 
 .shop-desc {
     font-size: 14px;
-    color: var(--text-muted, #555);
+    color: var(--text-muted);
     line-height: 1.5;
     margin-bottom: 15px;
 }
@@ -480,7 +512,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 }
 
 .btn-random {
-    background: #e63946;
+    background: var(--primary-red);
     color: #fff;
     border: none;
     padding: 12px 30px;
@@ -489,11 +521,11 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     border-radius: 30px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+    box-shadow: 0 4px 12px rgba(168, 0, 24, 0.3);
 }
 
 .btn-random:hover {
-    background: #d62839;
+    background: #8a0014;
     transform: translateY(-2px);
 }
 
@@ -501,4 +533,235 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     0% { transform: scale(1); opacity: 0.9; }
     50% { transform: scale(1.08); opacity: 1; }
     100% { transform: scale(1); opacity: 0.9; }
+}
+
+/* ==========================================
+   ส่วนของ Profile UI
+   ========================================== */
+.unauth-container {
+    max-width: 450px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 30px;
+}
+
+.unauth-card {
+    padding: 30px;
+}
+
+.unauth-title {
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
+
+.unauth-desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.profile-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.profile-sidebar {
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.profile-sidebar > div {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.profile-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+/* Avatar Component */
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.avatar-container {
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--primary-red);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: opacity 0.2s;
+}
+
+.avatar-container:hover .profile-avatar {
+    opacity: 0.85;
+}
+
+.camera-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #222;
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    border: 2px solid var(--card-bg);
+}
+
+.avatar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.avatar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.avatar-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+/* Profile Form Elements */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.profile-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    margin-bottom: 0;
+}
+
+.profile-form .form-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: block;
+    font-weight: 500;
+}
+
+.profile-form .form-display-box {
+    font-weight: 500;
+}
+
+.profile-form .btn-submit {
+    width: 100%;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary-red);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.2s;
+}
+
+.profile-form .btn-submit:hover {
+    background: #8a0014;
+}
+
+/* Settings & Action Cards */
+.card-header-title {
+    font-size: 16px;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    font-weight: 600;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-main);
+    margin-bottom: 12px;
+}
+
+.btn-logout {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(168, 0, 24, 0.3);
+    background: rgba(168, 0, 24, 0.05);
+    color: var(--primary-red);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    background: var(--primary-red);
+    color: #ffffff;
+    border-color: var(--primary-red);
+}
+
+/* Saved Cards Grid */
+.saved-section-title {
+    font-size: 18px;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.saved-section-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.saved-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 15px;
 }

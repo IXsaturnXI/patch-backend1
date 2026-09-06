@@ -513,93 +513,183 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 8. จัดการข้อมูลโปรไฟล์ & ดึงอีเมลมาแสดงอัตโนมัติ
-    // ==========================================
-    const editProfileForm = document.getElementById('edit-profile-form');
-    const logoutBtn = document.getElementById('logout-btn');
-    const unauthView = document.getElementById('unauthenticated-view');
-    const authView = document.getElementById('authenticated-view');
-    
-    const profileAvatarEl = document.getElementById('profile-avatar');
-    const profileEmailDisplay = document.getElementById('profile-email-display');
+// 8. จัดการข้อมูลโปรไฟล์ & อัปโหลดรูปภาพลง Supabase Storage
+// ==========================================
+const editProfileForm = document.getElementById('edit-profile-form');
+const unauthView = document.getElementById('unauthenticated-view');
+const authView = document.getElementById('authenticated-view');
 
-    const editFullnameInput = document.getElementById('edit-fullname');
-    const editUsernameInput = document.getElementById('edit-username');
-    const editFacultyInput = document.getElementById('edit-faculty');
+const profileAvatarEl = document.getElementById('profile-avatar');
+const profileEmailDisplay = document.getElementById('profile-email-display');
 
-    if (authView && unauthView && supabaseClient) {
-        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-            if (!session || !session.user) {
-                unauthView.style.display = 'block';
-                authView.style.display = 'none';
-            } else {
-                unauthView.style.display = 'none';
-                authView.style.display = 'flex';
+const editFullnameInput = document.getElementById('edit-fullname');
+const editUsernameInput = document.getElementById('edit-username');
+const editFacultyInput = document.getElementById('edit-faculty');
 
-                const user = session.user;
-                const name = user.user_metadata?.full_name || user.email.split('@')[0];
-                const email = user.email;
+const avatarContainer = document.getElementById('avatar-container');
+const avatarFileInput = document.getElementById('avatar-file-input');
+let selectedAvatarFile = null;
 
-                const username = user.user_metadata?.username || email.split('@')[0];
-                const faculty = user.user_metadata?.faculty || '';
+// 1. ระบบกดเลือกรูปภาพและทำ Live Preview ก่อนกดบันทึก
+if (avatarContainer && avatarFileInput) {
+    avatarContainer.addEventListener('click', () => {
+        avatarFileInput.click();
+    });
 
-                if (editFullnameInput) editFullnameInput.value = name;
-                if (editUsernameInput) editUsernameInput.value = username;
-                if (editFacultyInput) editFacultyInput.value = faculty;
-                
-                if (profileEmailDisplay) {
-                    profileEmailDisplay.textContent = email;
-                }
-                
+    avatarFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            
+            // ตรวจสอบขนาดไฟล์ (ไม่เกิน 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('ขนาดไฟล์ต้องไม่เกิน 5MB ครับ');
+                avatarFileInput.value = '';
+                return;
+            }
+
+            selectedAvatarFile = file;
+
+            // พรีวิวรูปภาพทันที
+            const reader = new FileReader();
+            reader.onload = (ev) => {
                 if (profileAvatarEl) {
-                    if (user.user_metadata?.avatar_url) {
-                        profileAvatarEl.innerHTML = `<img src="${user.user_metadata.avatar_url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`;
-                    } else {
-                        profileAvatarEl.textContent = name.charAt(0).toUpperCase();
-                    }
+                    profileAvatarEl.innerHTML = `<img src="${ev.target.result}" alt="Avatar Preview" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+            };
+            reader.readAsDataURL(selectedAvatarFile);
+        }
+    });
+}
+
+// 2. ดึงข้อมูล User จาก Supabase Session มาแสดงเมื่อโหลดหน้า
+if (authView && unauthView && typeof supabaseClient !== 'undefined') {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (!session || !session.user) {
+            unauthView.style.display = 'block';
+            authView.style.display = 'none';
+        } else {
+            unauthView.style.display = 'none';
+            authView.style.display = 'flex';
+
+            const user = session.user;
+            const email = user.email || '';
+            const metadata = user.user_metadata || {};
+
+            const fullname = metadata.full_name || email.split('@')[0];
+            const username = metadata.username || email.split('@')[0];
+            const faculty = metadata.faculty || '';
+            const avatarUrl = metadata.avatar_url || null;
+
+            // ใส่ค่าลง Input
+            if (editFullnameInput) editFullnameInput.value = fullname;
+            if (editUsernameInput) editUsernameInput.value = username;
+            if (editFacultyInput) editFacultyInput.value = faculty;
+            if (profileEmailDisplay) profileEmailDisplay.textContent = email;
+
+            // แสดงรูปโปรไฟล์ หรือ ตัวอักษรแรกถ้าไม่มีรูป
+            if (profileAvatarEl) {
+                if (avatarUrl) {
+                    profileAvatarEl.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    profileAvatarEl.textContent = fullname.charAt(0).toUpperCase();
+                }
+            }
+
+            // อัปเดตตัวเลขสถานที่ที่บันทึกไว้ (ถ้ามี Element นี้อยู่ในหน้า)
+            const savedPlaces = typeof getSavedPlaces === 'function' ? getSavedPlaces() : [];
+            const savedCountEl = document.getElementById('saved-count');
+            if (savedCountEl) savedCountEl.textContent = savedPlaces.length;
+        }
+    }).catch(err => {
+        console.error('Session retrieval error:', err);
+    });
+}
+
+// 3. ฟังก์ชันการอัปโหลดไฟล์ไป Storage และอัปเดต User Metadata
+if (editProfileForm && typeof supabaseClient !== 'undefined') {
+    editProfileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = editProfileForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.textContent : 'บันทึกการเปลี่ยนแปลง';
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังบันทึกข้อมูล...';
+        }
+
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session || !session.user) {
+                alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+                window.location.reload();
+                return;
+            }
+
+            const user = session.user;
+            let finalAvatarUrl = user.user_metadata?.avatar_url || null;
+
+            // ก. อัปโหลดรูปภาพใหม่ไปยัง Supabase Storage (ถ้ามีเลือกไฟล์ไว้)
+            if (selectedAvatarFile) {
+                const fileExt = selectedAvatarFile.name.split('.').pop();
+                const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+                const filePath = `avatars/${fileName}`;
+
+                // อัปโหลดไปยัง Bucket ชื่อ 'avatars'
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('avatars')
+                    .upload(filePath, selectedAvatarFile, { 
+                        cacheControl: '3600',
+                        upsert: true 
+                    });
+
+                if (uploadError) {
+                    console.error('Storage Upload Error:', uploadError);
+                    alert('อัปโหลดรูปภาพไม่สำเร็จ: ' + uploadError.message);
+                    return;
                 }
 
-                const savedPlaces = getSavedPlaces();
-                const savedCountEl = document.getElementById('saved-count');
-                if (savedCountEl) savedCountEl.textContent = savedPlaces.length;
-            }
-        });
-    }
+                // ดึง Public URL ของไฟล์ที่อัปโหลด
+                const { data: urlData } = supabaseClient.storage
+                    .from('avatars')
+                    .getPublicUrl(filePath);
 
-    if (editProfileForm && supabaseClient) {
-        editProfileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newName = editFullnameInput ? editFullnameInput.value.trim() : '';
-            const newUsername = editUsernameInput ? editUsernameInput.value.trim() : '';
-            const newFaculty = editFacultyInput ? editFacultyInput.value.trim() : '';
-
-            if (newName && profileAvatarEl) {
-                profileAvatarEl.textContent = newName.charAt(0).toUpperCase();
+                finalAvatarUrl = urlData.publicUrl;
             }
 
-            try {
-                await supabaseClient.auth.updateUser({
-                    data: {
-                        full_name: newName,
-                        username: newUsername,
-                        faculty: newFaculty
-                    }
-                });
-                alert('บันทึกข้อมูลเรียบร้อยแล้ว!');
-            } catch (err) {
-                console.error('Update metadata error:', err);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            // ข. เตรียมข้อมูลใหม่
+            const updatedFullName = editFullnameInput ? editFullnameInput.value.trim() : '';
+            const updatedUsername = editUsernameInput ? editUsernameInput.value.trim() : '';
+            const updatedFaculty = editFacultyInput ? editFacultyInput.value.trim() : '';
+
+            // ค. อัปเดตข้อมูล User Metadata ใน Supabase Auth
+            const { error: updateError } = await supabaseClient.auth.updateUser({
+                data: {
+                    full_name: updatedFullName,
+                    username: updatedUsername,
+                    faculty: updatedFaculty,
+                    avatar_url: finalAvatarUrl
+                }
+            });
+
+            if (updateError) {
+                throw updateError;
             }
-        });
-    }
 
-    if (logoutBtn && supabaseClient) {
-        logoutBtn.addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            window.location.reload();
-        });
-    }
-
+            alert('บันทึกข้อมูลโปรไฟล์และอัปเดตรูปภาพเรียบร้อยแล้ว!');
+            selectedAvatarFile = null; // รีเซ็ตไฟล์ที่เลือก
+            
+        } catch (err) {
+            console.error('Update profile error:', err);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + (err.message || err));
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
+        }
+    });
+}
     // ==========================================
     // 9. ดึงข้อมูลและแสดงผลรีวิว (review.html / detail.html)
     // ==========================================

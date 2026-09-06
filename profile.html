@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>โปรไฟล์ผู้ใช้ - TU Aroi</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -26,82 +27,92 @@
     </header>
 
     <!-- กรณีที่ยังไม่ได้เข้าสู่ระบบ -->
-    <div id="unauthenticated-view" style="display: none; max-width: 450px; margin: 80px auto; text-align: center; padding: 30px;">
-        <div class="card" style="padding: 30px;">
-            <h2 style="color: var(--text-main); margin-bottom: 10px;">กรุณาเข้าสู่ระบบ</h2>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">เข้าสู่ระบบเพื่อจัดการข้อมูลบัญชีผู้ใช้และดูรายการที่บันทึกไว้</p>
+    <div id="unauthenticated-view" class="unauth-container" style="display: none;">
+        <div class="card unauth-card">
+            <h2 class="unauth-title">กรุณาเข้าสู่ระบบ</h2>
+            <p class="unauth-desc">เข้าสู่ระบบเพื่อจัดการข้อมูลบัญชีผู้ใช้และดูรายการที่บันทึกไว้</p>
             <a href="login.html" class="btn-primary-red" style="display: block; padding: 10px; border-radius: 8px; text-decoration: none; color: white; font-weight: bold;">ไปที่หน้าเข้าสู่ระบบ</a>
         </div>
     </div>
 
-    <!-- กรณีเข้าสู่ระบบแล้ว (เลย์เอาต์ 2 คอลัมน์ตามต้นแบบ) -->
-    <div id="authenticated-view" class="container" style="display: none; display: flex; gap: 30px; align-items: flex-start; max-width: 1200px; margin: 30px auto; padding: 0 20px;">
+    <!-- กรณีเข้าสู่ระบบแล้ว (เลย์เอาต์ 2 คอลัมน์) -->
+    <div id="authenticated-view" class="profile-layout" style="display: none;">
         
         <!-- Sidebar ซ้าย: ข้อมูลบัญชี & ฟอร์มแก้ไข -->
-        <aside style="width: 380px; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0;">
-            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px var(--shadow-color);">
-                <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">ตั้งค่าบัญชีผู้ใช้</h3>
+        <aside class="profile-sidebar">
+            <div class="card">
+                <h3 class="card-header-title">ตั้งค่าบัญชีผู้ใช้</h3>
                 
-               <form id="edit-profile-form" style="display: flex; flex-direction: column; gap: 14px;">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
-        <div id="profile-avatar" style="width: 60px; height: 50px; border-radius: 50%; background: var(--primary-red); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; overflow: hidden;">U</div>
-        <div style="font-size: 13px; color: var(--text-muted);">จัดการรูปโปรไฟล์และข้อมูลส่วนตัวของคุณในระบบมหาวิทยาลัย</div>
-    </div>
+                <form id="edit-profile-form" class="profile-form">
+                    <!-- ส่วนอัปโหลดรูปโปรไฟล์ -->
+                    <div class="avatar-section">
+                        <div id="avatar-container" class="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์">
+                            <div id="profile-avatar" class="profile-avatar">U</div>
+                            <div class="camera-badge">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="avatar-info">
+                            <span class="avatar-title">รูปโปรไฟล์</span>
+                            <span class="avatar-desc">คลิกที่รูปเพื่อเลือกภาพใหม่</span>
+                        </div>
+                    </div>
 
-    <div>
-        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">ชื่อ - นามสกุล</label>
-        <input type="text" id="edit-fullname" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); border-radius: 6px; font-size: 13px; box-sizing: border-box;" required>
-    </div>
+                    <div class="form-group">
+                        <label for="edit-fullname" class="form-label">ชื่อ - นามสกุล</label>
+                        <input type="text" id="edit-fullname" class="form-input" required>
+                    </div>
 
-    <div>
-        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">รหัสนักศึกษา / Username</label>
-        <input type="text" id="edit-username" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); border-radius: 6px; font-size: 13px; box-sizing: border-box;" required>
-    </div>
+                    <div class="form-group">
+                        <label for="edit-username" class="form-label">รหัสนักศึกษา / Username</label>
+                        <input type="text" id="edit-username" class="form-input" required>
+                    </div>
 
-    <div>
-        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">คณะ / สาขาวิชา</label>
-        <input type="text" id="edit-faculty" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); border-radius: 6px; font-size: 13px; box-sizing: border-box;" required>
-    </div>
+                    <div class="form-group">
+                        <label for="edit-faculty" class="form-label">คณะ / สาขาวิชา</label>
+                        <input type="text" id="edit-faculty" class="form-input" required>
+                    </div>
 
-    <div>
-        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">อีเมลมหาวิทยาลัย</label>
-        <div id="profile-email-display" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); border-radius: 6px; font-size: 13px; box-sizing: border-box; font-weight: 500;">กำลังโหลด...</div>
-    </div>
+                    <div class="form-group">
+                        <label class="form-label">อีเมลมหาวิทยาลัย</label>
+                        <div id="profile-email-display" class="form-display-box">กำลังโหลด...</div>
+                    </div>
 
-    <button type="submit" class="btn-primary-red" style="width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px;">บันทึกข้อมูล</button>
-</form>
+                    <button type="submit" class="btn-primary-red btn-submit">บันทึกข้อมูล</button>
+                </form>
             </div>
 
             <!-- การตั้งค่าอื่นๆ -->
-            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                <h3 style="font-size: 15px; color: var(--text-main); margin-bottom: 12px;">การตั้งค่า</h3>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-main); margin-bottom: 10px;">
+            <div class="card">
+                <h3 class="card-header-title" style="margin-bottom: 12px;">การตั้งค่า</h3>
+                <div class="setting-row">
                     <span>การแจ้งเตือนกิจกรรมใหม่</span>
                     <input type="checkbox" checked style="accent-color: var(--primary-red);">
                 </div>
             </div>
 
             <!-- ออกจากระบบ -->
-            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px;">
-                <button id="logout-btn" style="width: 100%; padding: 10px; border: 1px solid var(--primary-red); background: transparent; color: var(--primary-red); border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s;">
+            <div class="card">
+                <button id="logout-btn" class="btn-logout">
                     <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
                 </button>
             </div>
         </aside>
 
-        <!-- Content ขวา: แสดงร้านค้าที่บันทึกไว้และรีวิว -->
-        <main style="flex: 1; display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+        <!-- Content ขวา: แสดงร้านค้าที่บันทึกไว้ -->
+        <main class="profile-main">
             <section>
-                <h3 style="font-size: 18px; color: var(--text-main); margin-bottom: 4px;">สถานที่ที่บันทึกไว้ (<span id="saved-count">0</span>)</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">ร้านอาหารและคาเฟ่ที่คุณกดถูกใจไว้</p>
-                <div id="saved-cards-grid" class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px;">
-                    <!-- รายการ์ดร้านที่บันทึกจะแสดงที่นี่ -->
+                <h3 class="saved-section-title">สถานที่ที่บันทึกไว้ (<span id="saved-count">0</span>)</h3>
+                <p class="saved-section-desc">ร้านอาหารและคาเฟ่ที่คุณกดถูกใจไว้</p>
+                <div id="saved-cards-grid" class="card-grid saved-grid">
+                    <!-- รายการการ์ดร้านที่บันทึกจะแสดงที่นี่ -->
                 </div>
             </section>
         </main>
     </div>
 
-    <footer class="footer-simple" style="text-align: center; padding: 30px; font-size: 12px; color: var(--text-muted);">
+    <footer class="footer-simple">
         © 2026 TU Aroi. Built for the academic community.
     </footer>
 
