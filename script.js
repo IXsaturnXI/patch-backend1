@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkGlobalAuthNavbar();
 
     // ==========================================
-    // 4. ข้อมูล Mock Data สำรอง
+    // 4. ข้อมูล Mock Data สำรอง (ครอบคลุมทุกหมวดหมู่และราคา)
     // ==========================================
     const mockPlaces = [
         {
@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rating: 4.8,
             distance_km: 0.2,
             is_open: true,
+            price: '$$',
             discount: 'ส่วนลดนักศึกษา 15%',
             image_url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=500'
         },
@@ -109,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rating: 4.5,
             distance_km: 0.5,
             is_open: true,
+            price: '$',
             discount: '',
             image_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=500'
         },
@@ -119,8 +121,64 @@ document.addEventListener('DOMContentLoaded', () => {
             rating: 4.6,
             distance_km: 0.8,
             is_open: true,
+            price: '$$',
             discount: 'เมนูใหม่โปรแรง',
             image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=500'
+        },
+        {
+            id: 4,
+            name: 'Board Game Club เชียงราก',
+            category: 'ศูนย์รวมเกม',
+            rating: 4.7,
+            distance_km: 1.2,
+            is_open: false,
+            price: '$',
+            discount: '',
+            image_url: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=500'
+        },
+        {
+            id: 5,
+            name: 'ศูนย์บริการนักศึกษา & ปริ้นท์งาน มธ.',
+            category: 'บริการนักศึกษา',
+            rating: 4.3,
+            distance_km: 0.3,
+            is_open: true,
+            price: '$',
+            discount: 'ปริ้นท์สีราคาพิเศษ',
+            image_url: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=500'
+        },
+        {
+            id: 6,
+            name: 'ก๋วยเตี๋ยวเรือท่าช้าง มธ.',
+            category: 'อาหารและเครื่องดื่ม',
+            rating: 4.9,
+            distance_km: 0.4,
+            is_open: true,
+            price: '$',
+            discount: 'แถมแคปหมูเมื่อเช็คอิน',
+            image_url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500'
+        },
+        {
+            id: 7,
+            name: 'Shabu House Chiangraak',
+            category: 'อาหารและเครื่องดื่ม',
+            rating: 4.2,
+            distance_km: 1.5,
+            is_open: true,
+            price: '$$$',
+            discount: 'มา 4 จ่าย 3',
+            image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500'
+        },
+        {
+            id: 8,
+            name: 'Library Cafe & Study Zone',
+            category: 'คาเฟ่และพื้นที่อ่านหนังสือ',
+            rating: 3.9,
+            distance_km: 0.6,
+            is_open: false,
+            price: '$$',
+            discount: '',
+            image_url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500'
         }
     ];
 
@@ -168,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="desc">${place.category || 'ร้านอาหาร'}</p>
                             <div class="card-footer">
                                 <span>📍 ${place.distance_km !== undefined ? 'ใกล้ ' + place.distance_km + ' กม.' : ''}</span>
-                                <span class="price">$$</span>
+                                <span class="price">${place.price || '$$'}</span>
                             </div>
                         </div>
                     </div>
@@ -204,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 6. ตัวกรองและแสดงผลการ์ดร้านค้า
+    // 6. ตัวกรองและการแสดงผลการ์ดร้านค้าแบบสมบูรณ์
     // ==========================================
     const filterOpen = document.getElementById('filter-open');
     const filterDistance = document.getElementById('filter-distance');
@@ -212,52 +270,201 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardGrid = document.querySelector('.card-grid');
 
     if (cardGrid && !document.getElementById('saved-cards-grid')) {
-        const fetchFilteredPlaces = async () => {
-            let placesToRender = [];
+        let displayLimit = 6;
+        let currentFilteredPlaces = [];
 
+        const fetchFilteredPlaces = async () => {
+            // 1. ดึงข้อความจากช่องค้นหา
+            let searchQuery = '';
+            const searchInputs = document.querySelectorAll('.search-box input');
+            searchInputs.forEach(input => {
+                if (input.value.trim()) searchQuery = input.value.trim().toLowerCase();
+            });
+
+            // 2. ดึงปุ่มหมวดหมู่ที่เลือก
+            const activeCatBtn = document.querySelector('.category-list .cat-btn.active');
+            const catText = activeCatBtn ? activeCatBtn.textContent.trim() : 'ร้านทั้งหมด';
+
+            // 3. ดึงค่าตัวกรองด่วน (Checkboxes)
+            const isOpenChecked = filterOpen && filterOpen.checked;
+            const isDistChecked = filterDistance && filterDistance.checked;
+            const isRatingChecked = filterRating && filterRating.checked;
+
+            // 4. ดึงค่าช่วงราคา
+            const activePriceBtn = document.querySelector('.price-btn-group .price-btn.active');
+            const priceValue = activePriceBtn ? activePriceBtn.textContent.trim() : null;
+
+            // 5. ดึงค่าการเรียงลำดับ
+            const sortSelect = document.querySelector('.sort-dropdown select');
+            const sortVal = sortSelect ? sortSelect.value : 'recommended';
+
+            let rawPlaces = [];
+
+            // พยายามโหลดข้อมูลจาก Supabase ถ้ามี
             if (supabaseClient) {
                 try {
-                    let query = supabaseClient.from('places').select('*');
-                    if (filterOpen && filterOpen.checked) query = query.eq('is_open', true);
-                    if (filterDistance && filterDistance.checked) query = query.lte('distance_km', 1.0);
-                    if (filterRating && filterRating.checked) query = query.gte('rating', 4.0);
-
-                    const { data, error } = await query;
+                    const { data, error } = await supabaseClient.from('places').select('*');
                     if (!error && data && data.length > 0) {
-                        placesToRender = data;
+                        rawPlaces = data;
                     }
                 } catch (err) {
                     console.error('Supabase fetch error:', err);
                 }
             }
 
-            if (placesToRender.length === 0) {
-                placesToRender = mockPlaces.filter(place => {
-                    if (filterOpen && filterOpen.checked && !place.is_open) return false;
-                    if (filterDistance && filterDistance.checked && place.distance_km > 1.0) return false;
-                    if (filterRating && filterRating.checked && place.rating < 4.0) return false;
-                    return true;
-                });
+            // หากไม่มีข้อมูลจากฐานข้อมูลให้ใช้ Mock Data
+            if (rawPlaces.length === 0) {
+                rawPlaces = mockPlaces;
             }
 
-            renderPlaces(placesToRender);
+            // ประมวลผลตัวกรองทุกประเภทพร้อมกัน
+            currentFilteredPlaces = rawPlaces.filter(place => {
+                // ค้นหาคำค้น Keyword
+                if (searchQuery) {
+                    const matchName = place.name ? place.name.toLowerCase().includes(searchQuery) : false;
+                    const matchCat = place.category ? place.category.toLowerCase().includes(searchQuery) : false;
+                    if (!matchName && !matchCat) return false;
+                }
+
+                // ตัวกรองหมวดหมู่
+                if (catText !== 'ร้านทั้งหมด' && !catText.includes('ร้านทั้งหมด')) {
+                    const pCat = (place.category || '').toLowerCase();
+                    if (catText.includes('อาหาร')) {
+                        if (!pCat.includes('อาหาร') && !pCat.includes('เครื่องดื่ม')) return false;
+                    } else if (catText.includes('อ่านหนังสือ')) {
+                        if (!pCat.includes('อ่านหนังสือ') && !pCat.includes('คาเฟ่')) return false;
+                    } else if (catText.includes('เกม')) {
+                        if (!pCat.includes('เกม')) return false;
+                    } else if (catText.includes('บริการ')) {
+                        if (!pCat.includes('บริการ')) return false;
+                    } else {
+                        if (!pCat.includes(catText.toLowerCase())) return false;
+                    }
+                }
+
+                // ตัวกรองด่วน Checkboxes
+                if (isOpenChecked && !place.is_open) return false;
+                if (isDistChecked && (place.distance_km === undefined || place.distance_km > 1.0)) return false;
+                if (isRatingChecked && (place.rating === undefined || place.rating < 4.0)) return false;
+
+                // ตัวกรองช่วงราคา
+                if (priceValue && priceValue !== 'ทั้งหมด') {
+                    if (place.price && place.price !== priceValue) return false;
+                }
+
+                return true;
+            });
+
+            // เรียงลำดับข้อมูล
+            if (sortVal === 'rating' || sortVal === 'คะแนนสูงสุด') {
+                currentFilteredPlaces.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            } else if (sortVal === 'distance' || sortVal === 'ระยะทางใกล้ที่สุด') {
+                currentFilteredPlaces.sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999));
+            }
+
+            renderPlaces();
         };
 
-        function renderPlaces(placesData) {
-            cardGrid.innerHTML = ''; 
-            if (placesData.length === 0) {
+        function renderPlaces() {
+            cardGrid.innerHTML = '';
+            if (currentFilteredPlaces.length === 0) {
                 cardGrid.innerHTML = '<p style="grid-column: span 3; text-align: center; color: var(--text-muted); padding: 40px 0;">ไม่พบร้านค้าที่ตรงกับเงื่อนไข</p>';
+                const loadBtn = document.querySelector('.load-more-btn');
+                if (loadBtn) loadBtn.style.display = 'none';
                 return;
             }
 
-            placesData.forEach(place => {
+            const placesToShow = currentFilteredPlaces.slice(0, displayLimit);
+            placesToShow.forEach(place => {
                 cardGrid.innerHTML += createCardHTML(place);
+            });
+
+            const loadBtn = document.querySelector('.load-more-btn');
+            if (loadBtn) {
+                if (displayLimit >= currentFilteredPlaces.length) {
+                    loadBtn.style.display = 'none';
+                } else {
+                    loadBtn.style.display = 'block';
+                }
+            }
+        }
+
+        // --- Event Listeners สำหรับตัวกรองทั้งหมด ---
+        if (filterOpen) filterOpen.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
+        if (filterDistance) filterDistance.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
+        if (filterRating) filterRating.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
+
+        // ปุ่มหมวดหมู่
+        document.querySelectorAll('.category-list .cat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-list .cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        });
+
+        // ปุ่มช่วงราคา
+        document.querySelectorAll('.price-btn-group .price-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const wasActive = btn.classList.contains('active');
+                document.querySelectorAll('.price-btn-group .price-btn').forEach(b => b.classList.remove('active'));
+                if (!wasActive) {
+                    btn.classList.add('active');
+                }
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        });
+
+        // ช่องค้นหาข้อความ
+        document.querySelectorAll('.search-box input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                document.querySelectorAll('.search-box input').forEach(other => {
+                    if (other !== e.target) other.value = val;
+                });
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        });
+
+        // Dropdown เรียงลำดับ
+        const sortSelect = document.querySelector('.sort-dropdown select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                displayLimit = 6;
+                fetchFilteredPlaces();
             });
         }
 
-        if (filterOpen) filterOpen.addEventListener('change', fetchFilteredPlaces);
-        if (filterDistance) filterDistance.addEventListener('change', fetchFilteredPlaces);
-        if (filterRating) filterRating.addEventListener('change', fetchFilteredPlaces);
+        // ปุ่มล้างตัวกรอง
+        const resetBtn = document.querySelector('.reset-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                document.querySelectorAll('.category-list .cat-btn').forEach((b, idx) => {
+                    if (idx === 0) b.classList.add('active');
+                    else b.classList.remove('active');
+                });
+                if (filterOpen) filterOpen.checked = false;
+                if (filterDistance) filterDistance.checked = false;
+                if (filterRating) filterRating.checked = false;
+                document.querySelectorAll('.price-btn-group .price-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.search-box input').forEach(input => input.value = '');
+                if (sortSelect) sortSelect.value = 'recommended';
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        }
+
+        // ปุ่มโหลดร้านเพิ่มเติม
+        const loadBtn = document.querySelector('.load-more-btn');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', () => {
+                displayLimit += 6;
+                renderPlaces();
+            });
+        }
 
         fetchFilteredPlaces();
     }
@@ -308,23 +515,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 8. จัดการข้อมูลโปรไฟล์ & ดึงอีเมลมาแสดงอัตโนมัติ
     // ==========================================
-    const editProfileBtn = document.getElementById('edit-profile-btn');
     const editProfileForm = document.getElementById('edit-profile-form');
     const logoutBtn = document.getElementById('logout-btn');
     const unauthView = document.getElementById('unauthenticated-view');
     const authView = document.getElementById('authenticated-view');
     
-    const profileNameEl = document.getElementById('profile-name');
     const profileAvatarEl = document.getElementById('profile-avatar');
-    const profileUsernameEl = document.getElementById('edit-username'); 
-    const profileFacultyEl = document.getElementById('edit-faculty');   
     const profileEmailDisplay = document.getElementById('profile-email-display');
 
     const editFullnameInput = document.getElementById('edit-fullname');
     const editUsernameInput = document.getElementById('edit-username');
     const editFacultyInput = document.getElementById('edit-faculty');
 
-    // โหลดข้อมูลโปรไฟล์และอีเมลจาก Supabase Session
     if (authView && unauthView && supabaseClient) {
         supabaseClient.auth.getSession().then(({ data: { session } }) => {
             if (!session || !session.user) {
@@ -336,18 +538,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const user = session.user;
                 const name = user.user_metadata?.full_name || user.email.split('@')[0];
-                const email = user.email; // อีเมลจริงของผู้ใช้
+                const email = user.email;
 
                 const username = user.user_metadata?.username || email.split('@')[0];
                 const faculty = user.user_metadata?.faculty || '';
 
-                // นำค่าไปใส่ในฟอร์มและส่วนแสดงผล
                 if (editFullnameInput) editFullnameInput.value = name;
                 if (editUsernameInput) editUsernameInput.value = username;
                 if (editFacultyInput) editFacultyInput.value = faculty;
                 
                 if (profileEmailDisplay) {
-                    profileEmailDisplay.textContent = email; // แสดงอีเมลจริงทันที
+                    profileEmailDisplay.textContent = email;
                 }
                 
                 if (profileAvatarEl) {
@@ -600,13 +801,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const mapElement = document.getElementById('map');
-    if (!mapElement) return; // หากหน้าเว็บไม่มี element #map จะข้ามการทำงานส่วนนี้ทันที
+    if (!mapElement) return;
 
-    // ค่าพิกัดเริ่มต้นศูนย์กลาง มหาวิทยาลัยธรรมศาสตร์ ศูนย์รังสิต
     const defaultCenter = [14.0677, 100.6014]; 
     const map = L.map('map').setView(defaultCenter, 15);
 
-    // เพิ่ม Tile Layer (แผนที่ฐาน OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
@@ -615,10 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAddMode = false;
     let tempMarker = null;
 
-    // สร้างปุ่มควบคุมและแบนเนอร์บนแผนที่แบบ Dynamic หากยังไม่มีใน HTML
     const mapWrapper = mapElement.closest('.map-wrapper') || mapElement.parentElement;
     
-    // Banner แจ้งเตือนโหมดปักหมุด
     let banner = mapWrapper.querySelector('.pin-mode-banner');
     if (!banner) {
         banner = document.createElement('div');
@@ -627,18 +824,15 @@ document.addEventListener('DOMContentLoaded', () => {
         mapWrapper.appendChild(banner);
     }
 
-    // แถบปุ่มควบคุมมุมขวาล่าง
     let controlsGroup = mapWrapper.querySelector('.map-controls-group');
     if (!controlsGroup) {
         controlsGroup = document.createElement('div');
         controlsGroup.className = 'map-controls-group';
         
-        // ปุ่มสลับโหมดปักหมุด
         const addModeBtn = document.createElement('button');
         addModeBtn.className = 'map-control-btn add-mode-btn';
         addModeBtn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มร้านค้าบนแผนที่';
         
-        // ปุ่มรีเซ็ตตำแหน่งแผนที่
         const resetLocBtn = document.createElement('button');
         resetLocBtn.className = 'map-control-btn';
         resetLocBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> ตำแหน่งของฉัน';
@@ -651,7 +845,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const addModeBtn = controlsGroup.querySelector('.add-mode-btn');
     const resetLocBtn = controlsGroup.querySelector('.map-control-btn:not(.add-mode-btn)');
 
-    // สลับโหมดปักหมุดเมื่อคลิกปุ่ม
     if (addModeBtn) {
         addModeBtn.addEventListener('click', () => {
             isAddMode = !isAddMode;
@@ -680,7 +873,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ฟังก์ชันระบุตำแหน่งปัจจุบันของผู้ใช้จริง (Geolocation API)
     if (resetLocBtn) {
         resetLocBtn.addEventListener('click', () => {
             if (!navigator.geolocation) {
@@ -689,7 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // แสดงสถานะกำลังค้นหา
             resetLocBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังค้นหา...';
 
             navigator.geolocation.getCurrentPosition(
@@ -698,10 +889,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const userLng = position.coords.longitude;
                     const userLatLng = [userLat, userLng];
 
-                    // ย้ายแผนที่ไปที่ตำแหน่งผู้ใช้จริง (ซูมระดับ 16)
                     map.setView(userLatLng, 16);
 
-                    // สร้างหรืออัปเดตหมุดแสดงตำแหน่งปัจจุบัน
                     let userMarker = window.currentUserMarker;
                     if (userMarker) {
                         userMarker.setLatLng(userLatLng);
@@ -717,14 +906,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     userMarker.bindPopup('<b>ตำแหน่งของคุณในขณะนี้</b>').openPopup();
 
-                    // คืนค่าปุ่มเดิม
                     resetLocBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> ตำแหน่งของฉัน';
                 },
                 (error) => {
                     console.error('Geolocation error:', error);
                     alert('ไม่สามารถเข้าถึงตำแหน่งของคุณได้ กรุณาตรวจสอบการอนุญาตสิทธิ์การเข้าถึงตำแหน่งในเบราว์เซอร์');
                     resetLocBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> ตำแหน่งของฉัน';
-                    // Fallback กลับไปที่ศูนย์กลาง มธ. รังสิต
                     map.setView(defaultCenter, 15);
                 },
                 { timeout: 10000, enableHighAccuracy: true }
@@ -732,14 +919,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ข้อมูลร้านค้าตัวแสดงบนแผนที่ (ปรับพิกัดตัวอย่างให้อยู่ภายใน มธ. รังสิต)
     const campusPlaces = [
         { id: 1, name: 'The Quad Coffee', lat: 14.0725, lng: 100.6060, category: 'คาเฟ่และพื้นที่อ่านหนังสือ' },
         { id: 2, name: 'ศูนย์อาหาร SC (Green Canteen)', lat: 14.0700, lng: 100.6080, category: 'อาหารและเครื่องดื่ม' },
         { id: 3, name: 'เดอะ เดลี่ แกรนด์ คาเฟ่', lat: 14.0650, lng: 100.6030, category: 'คาเฟ่และอาหารว่าง' }
     ];
 
-    // ฟังก์ชันเรนเดอร์หมุดร้านค้าเดิมลงบนแผนที่
     campusPlaces.forEach(place => {
         const marker = L.marker([place.lat, place.lng]).addTo(map);
         marker.bindPopup(`
@@ -751,18 +936,15 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
     });
 
-    // ตรวจจับเหตุการณ์คลิกบนแผนที่เพื่อเพิ่มร้านใหม่ (เมื่ออยู่ใน Add Mode)
     map.on('click', (e) => {
         if (!isAddMode) return;
 
         const { lat, lng } = e.latlng;
 
-        // ลบหมุดชั่วคراวก่อนหน้าถ้ามี
         if (tempMarker) {
             map.removeLayer(tempMarker);
         }
 
-        // สร้าง Popup ฟอร์มกรอกข้อมูลร้านค้าใหม่
         const popupContent = `
             <div class="add-place-popup">
                 <h4><i class="fa-solid fa-store"></i> เพิ่มร้านค้าใหม่</h4>
@@ -788,7 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tempMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
         tempMarker.bindPopup(popupContent, { maxWidth: 250 }).openPopup();
 
-        // จัดการเหตุการณ์ในฟอร์ม Popup
         setTimeout(() => {
             const form = document.getElementById('quick-add-place-form');
             const cancelBtn = document.getElementById('btn-pop-cancel');
@@ -801,7 +982,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (!name) return alert('กรุณากรอกชื่อร้านค้า');
 
-                    // ตรวจสอบ Supabase Client หากต้องการบันทึกลง Database จริง
                     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                         try {
                             const { error } = await supabaseClient.from('places').insert([{
@@ -840,7 +1020,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ข้อมูลตัวอย่างร้านค้าสำหรับระบบสุ่ม
+// ==========================================
+// 12. ระบบการสุ่มไพ่ร้านค้า (random.html)
+// ==========================================
 const mockShops = [
     {
         id: 1,
@@ -890,12 +1072,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!tarotCard || !btnRandom) return;
 
-    // ฟังก์ชันสุ่มร้านค้า
     function pickRandomShop() {
         const catFilter = document.getElementById('random-category').value;
         const priceFilter = document.getElementById('random-price').value;
 
-        // กรองข้อมูลตามที่เลือก
         let filtered = mockShops.filter(shop => {
             const matchCat = (catFilter === 'all' || shop.category === catFilter);
             const matchPrice = (priceFilter === 'all' || shop.price === priceFilter);
@@ -907,11 +1087,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // สุ่ม 1 ร้าน
         const randomIndex = Math.floor(Math.random() * filtered.length);
         const selectedShop = filtered[randomIndex];
 
-        // หากเปิดไพ่อยู่ ให้พลิกกลับก่อนแล้วเปิดใหม่
         if (tarotCard.classList.contains('flipped')) {
             tarotCard.classList.remove('flipped');
             setTimeout(() => {
@@ -924,7 +1102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // อัปเดตข้อมูลลงบนการ์ดไพ่
     function updateCardData(shop) {
         document.getElementById('res-title').textContent = shop.title;
         document.getElementById('res-img').src = shop.image;
@@ -935,7 +1112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('res-link').href = `detail.html?id=${shop.id}`;
     }
 
-    // ผูก Event Listeners
     btnRandom.addEventListener('click', pickRandomShop);
     tarotCard.addEventListener('click', pickRandomShop);
 });
