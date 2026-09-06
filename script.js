@@ -901,6 +901,16 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // กำหนดรูปแบบ Icon หมุดสีแดง
+    const redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
     let isAddMode = false;
     let tempMarker = null;
 
@@ -1015,8 +1025,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 3, name: 'เดอะ เดลี่ แกรนด์ คาเฟ่', lat: 14.0650, lng: 100.6030, category: 'คาเฟ่และอาหารว่าง' }
     ];
 
+    // สร้างหมุดสถานที่ต่างๆ บนแผนที่
     campusPlaces.forEach(place => {
-        const marker = L.marker([place.lat, place.lng]).addTo(map);
+        const marker = L.marker([place.lat, place.lng], { icon: redIcon }).addTo(map);
         marker.bindPopup(`
             <div style="font-family: inherit; padding: 4px;">
                 <h4 style="margin: 0 0 5px 0; color: var(--primary-red); font-size: 14px;">${place.name}</h4>
@@ -1024,6 +1035,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="detail.html?id=${place.id}" style="font-size: 11px; color: #e63946; font-weight: bold; text-decoration: underline;">ดูรายละเอียดร้าน</a>
             </div>
         `);
+
+        // แสดงข้อมูลทันทีเมื่อเลื่อนเมาส์มาโดนหมุด (Hover)
+        marker.on('mouseover', function () {
+            this.openPopup();
+        });
     });
 
     map.on('click', (e) => {
@@ -1057,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `; 
 
-        tempMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        tempMarker = L.marker([lat, lng], { icon: redIcon, draggable: true }).addTo(map);
         tempMarker.bindPopup(popupContent, { maxWidth: 250 }).openPopup();
 
         setTimeout(() => {
@@ -1072,17 +1088,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (!name) return alert('กรุณากรอกชื่อร้านค้า');
 
+                    let newPlaceId = null;
+
                     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                         try {
-                            const { error } = await supabaseClient.from('places').insert([{
+                            const { data, error } = await supabaseClient.from('places').insert([{
                                 name: name,
                                 category: category,
                                 lat: lat,
                                 lng: lng,
                                 rating: 5.0,
                                 is_open: true
-                            }]);
+                            }]).select();
+
                             if (error) throw error;
+                            if (data && data.length > 0) newPlaceId = data[0].id;
+                            
                             alert('เพิ่มร้านค้าลงในระบบสำเร็จ!');
                         } catch (err) {
                             console.error('Insert place error:', err);
@@ -1091,6 +1112,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         alert(`เพิ่มร้าน "${name}" (${category}) เรียบร้อยแล้ว!`);
                     }
+
+                    // สร้างหมุดถาวร
+                    const permanentMarker = L.marker([lat, lng], { icon: redIcon }).addTo(map);
+                    const detailUrl = newPlaceId ? `detail.html?id=${newPlaceId}` : 'detail.html';
+                    
+                    permanentMarker.bindPopup(`
+                        <div style="font-family: inherit; padding: 4px;">
+                            <h4 style="margin: 0 0 5px 0; color: var(--primary-red); font-size: 14px;">${name}</h4>
+                            <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">${category}</p>
+                            <a href="${detailUrl}" style="font-size: 11px; color: #e63946; font-weight: bold; text-decoration: underline;">ดูรายละเอียดร้าน</a>
+                        </div>
+                    `);
+
+                    // เพิ่ม Event Hover ให้หมุดใหม่ที่เพิ่งสร้าง
+                    permanentMarker.on('mouseover', function () {
+                        this.openPopup();
+                    });
 
                     tempMarker.closePopup();
                     exitAddMode();
@@ -1109,7 +1147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     });
 });
-
 // ==========================================
 // 12. ระบบการสุ่มไพ่ร้านค้า (random.html)
 // ==========================================
