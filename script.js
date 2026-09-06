@@ -783,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </form>
             </div>
-        `;
+        `; 
 
         tempMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
         tempMarker.bindPopup(popupContent, { maxWidth: 250 }).openPopup();
