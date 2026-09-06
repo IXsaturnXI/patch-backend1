@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 สุ่มไพ่ร้านค้า - TU Aroi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">TU Aroi</div>
+        <nav class="nav-links">
+            <a href="search.html">ค้นพบ</a>
+            <a href="profile.html">บันทึกไว้</a>
+            <a href="events.html">กิจกรรม</a>
+            <a href="map.html">แผนที่วิทยาเขต</a>
+            <a href="random.html" class="active nav-random">🔮 สุ่มไพ่ร้านค้า</a>
+        </nav>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="ค้นหาร้านอร่อย...">
+            </div>
+            <button id="darkModeToggle" class="theme-toggle-btn" title="สลับโหมดสว่าง/มืด">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <i class="fa-regular fa-bell icon-btn"></i>
+            <a href="profile.html"><i class="fa-regular fa-user icon-btn"></i></a>
+            <a href="login.html" class="btn-primary-red" style="padding: 6px 14px; font-size: 13px;">เข้าสู่ระบบ</a>
+        </div>
+    </header>
+
+    <div class="random-container">
+        <div class="random-header">
+            <h1>🔮 เปิดไพ่เสี่ยงทายร้านอร่อย</h1>
+            <p>คิดไม่ออกว่าจะกินอะไรดี? ให้ไพ่ธรรมศาสตร์ช่วยเลือกสิ!</p>
+        </div>
+
+        <!-- ตัวกรองด่วนสำหรับการสุ่ม -->
+        <div class="filter-card">
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label for="random-category">หมวดหมู่</label>
+                    <select id="random-category">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="food">อาหารและเครื่องดื่ม</option>
+                        <option value="study">โซนอ่านหนังสือ</option>
+                        <option value="game">ศูนย์รวมเกม</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="random-price">งบประมาณ</label>
+                    <select id="random-price">
+                        <option value="all">ทุกระดับราคา</option>
+                        <option value="$">$ (ประหยัด &lt; 80฿)</option>
+                        <option value="$$">$$ (ปานกลาง 80-200฿)</option>
+                        <option value="$$$">$$$ (ราคาสูง 200฿+)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ไพ่สุ่ม -->
+        <div class="card-wrapper">
+            <div class="tarot-card" id="tarotCard">
+                <!-- ด้านหลังไพ่ (ก่อนเปิด) -->
+                <div class="card-front">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <p>แตะเพื่อเปิดไพ่</p>
+                </div>
+                <!-- ด้านหน้าไพ่ (ผลลัพธ์) -->
+                <div class="card-back">
+                    <img id="res-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500" alt="ร้านค้า">
+                    <div class="card-body">
+                        <div>
+                            <div class="shop-title" id="res-title">ชื่อร้านค้า</div>
+                            <div class="shop-meta">
+                                <span><i class="fa-solid fa-star" style="color:#f1c40f;"></i> <span id="res-rating">4.8</span></span>
+                                <span><i class="fa-solid fa-tag"></i> <span id="res-cat">อาหารตามสั่ง</span></span>
+                                <span><i class="fa-solid fa-dollar-sign"></i> <span id="res-price">$</span></span>
+                            </div>
+                            <p class="shop-desc" id="res-desc">คำอธิบายร้านค้าสั้นๆ สำหรับแนะนำเมนูเด็ด</p>
+                        </div>
+                        <div class="shop-actions">
+                            <a id="res-link" href="detail.html" class="btn-primary-red" style="flex:1; text-align:center; text-decoration:none; display:inline-block; padding: 8px 0; font-size:14px; border-radius:8px;">ดูรายละเอียด</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-random" id="btnRandom"><i class="fa-solid fa-dice"></i> สุ่มร้านอาหารเลย!</button>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-logo">TU Aroi</div>
+        <p>© 2026 รวบรวมร้านเด็ดและสถานที่รอบมหาวิทยาลัยธรรมศาสตร์</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="random.js"></script>
+</body>
+</html>

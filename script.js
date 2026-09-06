@@ -839,3 +839,103 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     });
 });
+
+// ข้อมูลตัวอย่างร้านค้าสำหรับระบบสุ่ม
+const mockShops = [
+    {
+        id: 1,
+        title: "ก๋วยเตี๋ยวเรือท่าช้าง มธ.",
+        category: "food",
+        categoryText: "อาหารและเครื่องดื่ม",
+        price: "$",
+        rating: 4.8,
+        image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500",
+        desc: "ก๋วยเตี๋ยวเรือรสเด็ด เข้มข้นไม่ต้องปรุงเพิ่ม ราคานักศึกษาเริ่มต้น 40 บาท"
+    },
+    {
+        id: 2,
+        title: "Cafe & Co-Working Space ยูพาร์ค",
+        category: "study",
+        categoryText: "โซนอ่านหนังสือ",
+        price: "$$",
+        rating: 4.6,
+        image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500",
+        desc: "บรรยากาศเงียบสงบ มีปลั๊กไฟและ Wi-Fi ฟรี เหมาะสำหรับอ่านหนังสือสอบ"
+    },
+    {
+        id: 3,
+        title: "ชาบู ชาบู หน้า ม.",
+        category: "food",
+        categoryText: "อาหารและเครื่องดื่ม",
+        price: "$$",
+        rating: 4.9,
+        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500",
+        desc: "บุฟเฟต์ชาบูหมูเนื้อไม่อั้น น้ำซุปดำกลมกล่อม ของกินเล่นเพียบ"
+    },
+    {
+        id: 4,
+        title: "Board Game Club เชียงราก",
+        category: "game",
+        categoryText: "ศูนย์รวมเกม",
+        price: "$",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=500",
+        desc: "แหล่งรวมบอร์ดเกมกว่า 200 เกม พนักงานช่วยสอนเล่น นั่งได้ยาวๆ"
+    }
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tarotCard = document.getElementById('tarotCard');
+    const btnRandom = document.getElementById('btnRandom');
+
+    if (!tarotCard || !btnRandom) return;
+
+    // ฟังก์ชันสุ่มร้านค้า
+    function pickRandomShop() {
+        const catFilter = document.getElementById('random-category').value;
+        const priceFilter = document.getElementById('random-price').value;
+
+        // กรองข้อมูลตามที่เลือก
+        let filtered = mockShops.filter(shop => {
+            const matchCat = (catFilter === 'all' || shop.category === catFilter);
+            const matchPrice = (priceFilter === 'all' || shop.price === priceFilter);
+            return matchCat && matchPrice;
+        });
+
+        if (filtered.length === 0) {
+            alert("ไม่พบร้านตามเงื่อนไขที่เลือก ลองเปลี่ยนตัวกรองดูนะครับ!");
+            return;
+        }
+
+        // สุ่ม 1 ร้าน
+        const randomIndex = Math.floor(Math.random() * filtered.length);
+        const selectedShop = filtered[randomIndex];
+
+        // หากเปิดไพ่อยู่ ให้พลิกกลับก่อนแล้วเปิดใหม่
+        if (tarotCard.classList.contains('flipped')) {
+            tarotCard.classList.remove('flipped');
+            setTimeout(() => {
+                updateCardData(selectedShop);
+                tarotCard.classList.add('flipped');
+            }, 400);
+        } else {
+            updateCardData(selectedShop);
+            tarotCard.classList.add('flipped');
+        }
+    }
+
+    // อัปเดตข้อมูลลงบนการ์ดไพ่
+    function updateCardData(shop) {
+        document.getElementById('res-title').textContent = shop.title;
+        document.getElementById('res-img').src = shop.image;
+        document.getElementById('res-rating').textContent = shop.rating;
+        document.getElementById('res-cat').textContent = shop.categoryText;
+        document.getElementById('res-price').textContent = shop.price;
+        document.getElementById('res-desc').textContent = shop.desc;
+        document.getElementById('res-link').href = `detail.html?id=${shop.id}`;
+    }
+
+    // ผูก Event Listeners
+    btnRandom.addEventListener('click', pickRandomShop);
+    tarotCard.addEventListener('click', pickRandomShop);
+});
