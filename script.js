@@ -1242,3 +1242,31 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRandom.addEventListener('click', pickRandomShop);
     tarotCard.addEventListener('click', pickRandomShop);
 });
+
+///แก้ไขส่วนอีเว้น เพิ่มหมวดหมู่ให้แล้วก็เพิ่มกิจกรรมมา///
+document.addEventListener('DOMContentLoaded', () => {
+    const filterPills = document.querySelectorAll('.tag-pill');
+    const eventCards = document.querySelectorAll('.event-card');
+
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            // 1. เปลี่ยนสถานะปุ่ม Active
+            filterPills.forEach(btn => btn.classList.remove('active'));
+            pill.classList.add('active');
+
+            // 2. ดึงค่า Category ที่กด
+            const selectedCategory = pill.getAttribute('data-category');
+
+            // 3. ซ่อน/แสดง Event Cards ตาม Category
+            eventCards.forEach(card => {
+                const cardCategories = card.getAttribute('data-category');
+
+                if (selectedCategory === 'all' || cardCategories.includes(selectedCategory)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    });
+});
