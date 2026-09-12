@@ -26,7 +26,6 @@
             <button id="darkModeToggle" class="theme-toggle-btn" title="สลับโหมดสว่าง/มืด">
                 <i class="fa-solid fa-moon"></i>
             </button>
-            <i class="fa-regular fa-bell icon-btn"></i>
             <a href="profile.html"><i class="fa-regular fa-user icon-btn"></i></a>
             <a href="login.html" class="btn-primary-red" style="padding: 6px 14px; font-size: 13px;">เข้าสู่ระบบ</a>
         </div>
@@ -44,18 +43,37 @@
                 <button class="cat-btn"><i class="fa-solid fa-user-graduate"></i> บริการนักศึกษา</button>
             </div>
             <hr>
-            <h4>ตัวกรองด่วน</h4>
-            <label><input type="checkbox" id="filter-open"> เปิดอยู่</label>
-            <label><input type="checkbox" id="filter-distance"> ระยะทาง &lt; 1 กม.</label>
-            <label><input type="checkbox" id="filter-rating"> 4 ดาวขึ้นไป</label>
-            <hr>
-            <h4>ช่วงราคา</h4>
-            <div class="price-btn-group">
-                <button class="price-btn">$</button>
-                <button class="price-btn">$$</button>
-                <button class="price-btn">$$$</button>
-            </div>
-            <button class="reset-btn">ล้างตัวกรอง</button>
+            <!-- Quick Filters: self-contained so the rest of the sidebar remains unchanged. -->
+            <section class="quick-filters" aria-labelledby="quick-filters-title">
+                <div class="quick-filters-heading">
+                    <div>
+                        <p class="quick-filters-eyebrow">QUICK FILTERS</p>
+                        <h4 id="quick-filters-title">ตัวกรองด่วน</h4>
+                    </div>
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                </div>
+                <label class="quick-filter-check"><input type="checkbox" id="filter-open"> <span>เปิดอยู่ตอนนี้</span></label>
+                <label class="quick-filter-label" for="filter-distance">ระยะทางจากฉัน</label>
+                <select id="filter-distance">
+                    <option value="all">ทุกระยะทาง</option>
+                    <option value="1">ไม่เกิน 1 กม.</option>
+                    <option value="3">ไม่เกิน 3 กม.</option>
+                    <option value="5">ไม่เกิน 5 กม.</option>
+                </select>
+                <p id="distance-filter-status" class="sub-text" aria-live="polite"></p>
+                <label class="quick-filter-check"><input type="checkbox" id="filter-rating"> <span>4 ดาวขึ้นไป</span></label>
+                <div class="quick-filter-divider"></div>
+                <div class="price-filter-heading">
+                    <span>ช่วงราคา</span>
+                    <span class="price-filter-hint">เลือกได้หลายระดับ</span>
+                </div>
+                <div class="price-btn-group" role="group" aria-label="กรองตามช่วงราคา">
+                    <button class="price-btn" type="button" data-price="$" aria-pressed="false">$</button>
+                    <button class="price-btn" type="button" data-price="$$" aria-pressed="false">$$</button>
+                    <button class="price-btn" type="button" data-price="$$$" aria-pressed="false">$$$</button>
+                </div>
+                <button class="reset-btn" type="button">ล้างตัวกรอง</button>
+            </section>
         </aside>
 
         <main class="content">

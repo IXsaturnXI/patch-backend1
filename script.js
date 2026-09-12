@@ -64,9 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. ฟังก์ชันสลับปุ่ม เข้าสู่ระบบ / ออกจากระบบ บน Navbar
     // ==========================================
     async function checkGlobalAuthNavbar() {
-        if (!supabaseClient) return;
+        if (!supabaseClient) {
+            updateGlobalNotificationBell(null);
+            return;
+        }
         try {
             const { data: { session } } = await supabaseClient.auth.getSession();
+            updateGlobalNotificationBell(session && session.user);
             const loginBtns = document.querySelectorAll('.header-right a[href="login.html"], .header-right #global-logout-btn');
             
             loginBtns.forEach(btn => {
@@ -83,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (err) {
             console.log('Navbar Auth Check:', err);
+            updateGlobalNotificationBell(null);
         }
     }
 
@@ -114,6 +119,138 @@ document.addEventListener('DOMContentLoaded', () => {
         return saved.includes(strId);
     };
 
+    // ==========================================
+    // 5.1 Global authenticated notification bell
+    // ==========================================
+    function updateGlobalNotificationBell(user) {
+        const headerRight = document.querySelector('.header-right');
+        const existingBell = headerRight && headerRight.querySelector('.notification-bell-wrap');
+
+        // A bell is never present in the DOM for guests.
+        if (!user || !headerRight) {
+            if (existingBell) existingBell.remove();
+            return;
+        }
+        if (existingBell) return;
+
+        const bellWrap = document.createElement('div');
+        bellWrap.className = 'notification-bell-wrap';
+        bellWrap.innerHTML = `
+            <button class="notification-bell icon-btn" type="button" aria-label="การแจ้งเตือน" aria-expanded="false">
+                <i class="fa-regular fa-bell" aria-hidden="true"></i>
+            </button>
+            <section class="notification-dropdown" aria-label="การแจ้งเตือนล่าสุด" hidden>
+                <div class="notification-dropdown-header"><span>การแจ้งเตือน</span><i class="fa-regular fa-bell" aria-hidden="true"></i></div>
+                <div class="notification-list" aria-live="polite"></div>
+            </section>`;
+
+        const themeButton = headerRight.querySelector('#darkModeToggle');
+        if (themeButton) themeButton.insertAdjacentElement('afterend', bellWrap);
+        else headerRight.prepend(bellWrap);
+
+        const notificationBell = bellWrap.querySelector('.notification-bell');
+        const notificationDropdown = bellWrap.querySelector('.notification-dropdown');
+        const notificationList = bellWrap.querySelector('.notification-list');
+
+        const renderEmpty = () => {
+            notificationList.replaceChildren();
+            const empty = document.createElement('div');
+            empty.className = 'notification-empty';
+            empty.textContent = 'ไม่มีการแจ้งเตือนใดๆ';
+            notificationList.appendChild(empty);
+        };
+
+        const appendNotification = ({ message, timestamp, icon = 'fa-store' }) => {
+            const item = document.createElement('article');
+            item.className = 'notification-item';
+            const iconContainer = document.createElement('span');
+            iconContainer.className = 'notification-item-icon';
+            iconContainer.innerHTML = `<i class="fa-solid ${icon}" aria-hidden="true"></i>`;
+            const content = document.createElement('div');
+            const text = document.createElement('p');
+            text.textContent = message;
+            content.appendChild(text);
+            if (timestamp) {
+                const date = new Date(timestamp);
+                if (!Number.isNaN(date.getTime())) {
+                    const time = document.createElement('small');
+                    time.textContent = date.toLocaleString('th-TH');
+                    content.appendChild(time);
+                }
+            }
+            item.append(iconContainer, content);
+            notificationList.appendChild(item);
+        };
+
+        const readActivityNotifications = () => {
+            try {
+                const notices = JSON.parse(localStorage.getItem('tu_aroi_activity_notifications') || '[]');
+                return Array.isArray(notices) ? notices : [];
+            } catch (_) {
+                return [];
+            }
+        };
+
+        const renderNotifications = async () => {
+            const activityNotices = readActivityNotifications()
+                .filter(notice => !notice.user_id || notice.user_id === user.id)
+                .slice(0, 5);
+            const savedIds = getSavedPlaces();
+            let savedPlaces = [];
+            if (savedIds.length && supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('places').select('*').in('id', savedIds);
+                    if (!error && data) savedPlaces = data;
+                } catch (error) {
+                    console.warn('Notification fetch error:', error);
+                }
+            }
+            if (!savedPlaces.length) savedPlaces = mockPlaces.filter(place => savedIds.includes(String(place.id)));
+
+            const savedPlaceUpdates = savedPlaces
+                .filter(place => place.discount || place.updated_at)
+                .slice(0, 5)
+                .map(place => ({
+                    message: place.discount
+                        ? `${place.name || 'ร้านที่บันทึกไว้'}: ${place.discount}`
+                        : `${place.name || 'ร้านที่บันทึกไว้'} มีข้อมูลอัปเดตล่าสุด`,
+                    timestamp: place.updated_at,
+                    icon: 'fa-store'
+                }));
+            const activityUpdates = activityNotices.map(notice => ({
+                message: notice.message || notice.title || 'มีกิจกรรมใหม่สำหรับคุณ',
+                timestamp: notice.updated_at || notice.created_at || notice.date,
+                icon: 'fa-calendar-day'
+            }));
+            const updates = [...activityUpdates, ...savedPlaceUpdates].slice(0, 5);
+
+            if (!updates.length) {
+                renderEmpty();
+                return;
+            }
+            notificationList.replaceChildren();
+            updates.forEach(appendNotification);
+        };
+
+        const setOpen = (isOpen) => {
+            notificationDropdown.hidden = !isOpen;
+            notificationBell.setAttribute('aria-expanded', String(isOpen));
+        };
+
+        notificationBell.addEventListener('click', async event => {
+            event.stopPropagation();
+            const willOpen = notificationDropdown.hidden;
+            setOpen(willOpen);
+            if (willOpen) await renderNotifications();
+        });
+        document.addEventListener('click', event => {
+            if (!notificationDropdown.hidden && !event.target.closest('.notification-bell-wrap')) setOpen(false);
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') setOpen(false);
+        });
+    }
+
     function createCardHTML(place) {
         const savedPlaces = getSavedPlaces();
         const isSaved = savedPlaces.includes(String(place.id));
@@ -137,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="card-info">
                             <h3>${place.name}</h3>
+                            ${typeof place.currently_open === 'boolean' ? `<span class="store-status ${place.currently_open ? 'is-open' : 'is-closed'}">${place.currently_open ? 'Open Now' : 'Closed'}</span>` : ''}
                             <p class="desc">${place.category || 'ร้านอาหาร'}</p>
                             <div class="card-footer">
                                 <span>📍 ${place.distance_km !== undefined ? 'ใกล้ ' + place.distance_km + ' กม.' : (place.address || 'มธ. รังสิต')}</span>
@@ -182,9 +320,92 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cardGrid && !document.getElementById('saved-cards-grid')) {
         let displayLimit = 6;
         let currentFilteredPlaces = [];
+        let userLocation = null;
+
         const filterOpen = document.getElementById('filter-open');
         const filterDistance = document.getElementById('filter-distance');
         const filterRating = document.getElementById('filter-rating');
+        const distanceStatus = document.getElementById('distance-filter-status');
+
+        // Status is calculated against the visitor's local clock. Overnight
+        // schedules (such as 18:00–02:00) are supported as well.
+        const timeToMinutes = (value) => {
+            if (typeof value !== 'string') return null;
+            const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+            if (!match) return null;
+            const hours = Number(match[1]);
+            const minutes = Number(match[2]);
+            return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
+        };
+
+        const getStoreOpenStatus = (place, now = new Date()) => {
+            const openAt = timeToMinutes(place.open_time || place.opening_time);
+            const closeAt = timeToMinutes(place.close_time || place.closing_time);
+            if (openAt !== null && closeAt !== null) {
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                if (openAt === closeAt) return true;
+                return closeAt > openAt
+                    ? currentTime >= openAt && currentTime < closeAt
+                    : currentTime >= openAt || currentTime < closeAt;
+            }
+            if (typeof place.is_open === 'boolean') return place.is_open;
+            const declaredStatus = String(place.status || '').trim().toLowerCase();
+            if (declaredStatus.includes('เปิด') || declaredStatus.includes('open')) return true;
+            return false;
+        };
+
+        const getSelectedPriceTiers = () => Array.from(document.querySelectorAll('.price-btn-group .price-btn.active'))
+            .map(button => button.dataset.price || button.textContent.trim());
+        const getPriceTiers = (value) => String(value || '').match(/\${1,3}/g) || [];
+
+        // ฟังก์ชันสกัด Lat/Lng จากลิงก์ Google Maps
+        const parseLatLngFromUrl = (url) => {
+            if (!url) return null;
+            const latMatch = url.match(/!3d(-?\d+\.\d+)/);
+            const lngMatch = url.match(/!4d(-?\d+\.\d+)/);
+            if (latMatch && lngMatch) {
+                return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
+            }
+            return null;
+        };
+
+        // สูตร Haversine คำนวณระยะทางตามพิกัดจริง (หน่วย กม.)
+        const getHaversineDistance = (coords1, coords2) => {
+            const toRad = x => (x * Math.PI) / 180;
+            const R = 6371; // รัศมีโลก
+            const dLat = toRad(coords2.lat - coords1.lat);
+            const dLon = toRad(coords2.lng - coords1.lng);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        };
+
+        // ขอสิทธิ์ระบุตำแหน่งพิกัดผู้ใช้
+        const getUserLocation = () => {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    if (distanceStatus) distanceStatus.textContent = 'เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง';
+                    resolve(null);
+                    return;
+                }
+                if (distanceStatus) distanceStatus.textContent = 'กำลังระบุตำแหน่งของคุณ...';
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        if (distanceStatus) distanceStatus.textContent = ' 📍 อ้างอิงตำแหน่งปัจจุบันของคุณ';
+                        resolve(userLocation);
+                    },
+                    (err) => {
+                        console.warn('Geolocation denied/failed:', err);
+                        if (distanceStatus) distanceStatus.textContent = '⚠️ ใช้ระยะทางประเมิน (ไม่ได้เปิด GPS)';
+                        resolve(null);
+                    },
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+                );
+            });
+        };
 
         const fetchFilteredPlaces = async () => {
             let searchQuery = '';
@@ -196,53 +417,98 @@ document.addEventListener('DOMContentLoaded', () => {
             const catText = activeCatBtn ? activeCatBtn.textContent.trim() : 'ร้านทั้งหมด';
 
             const isOpenChecked = filterOpen && filterOpen.checked;
-            const isDistChecked = filterDistance && filterDistance.checked;
+            const maxDistanceVal = filterDistance ? filterDistance.value : 'all';
             const isRatingChecked = filterRating && filterRating.checked;
 
-            const activePriceBtn = document.querySelector('.price-btn-group .price-btn.active');
-            const priceValue = activePriceBtn ? activePriceBtn.textContent.trim() : null;
+            const selectedPriceTiers = getSelectedPriceTiers();
 
             const sortSelect = document.querySelector('.sort-dropdown select');
             const sortVal = sortSelect ? sortSelect.value : 'recommended';
 
             let rawPlaces = [];
 
-            // โหลดข้อมูลจาก Supabase โดยใช้ตาราง 'places' (สามารถเปลี่ยนชื่อเป็น shops ได้ตามโครงสร้าง CSV)
             if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient.from('places').select('*'); // <--- เปลี่ยนตรงนี้ถ้าตารางชื่อ shops
+                    const { data, error } = await supabaseClient.from('places').select('*');
                     if (!error && data && data.length > 0) rawPlaces = data;
                 } catch (err) { console.error('Supabase fetch error:', err); }
             }
 
             if (rawPlaces.length === 0) rawPlaces = mockPlaces;
 
+            // ประมวลผลคำนวณระยะทางของทุกร้าน
+            rawPlaces = rawPlaces.map(place => {
+                const mapUrl = place.google_map || place['google map'] || '';
+                let placeLat = place.lat;
+                let placeLng = place.lng;
+
+                if (!placeLat || !placeLng) {
+                    const extracted = parseLatLngFromUrl(mapUrl);
+                    if (extracted) {
+                        placeLat = extracted.lat;
+                        placeLng = extracted.lng;
+                    }
+                }
+
+                let computedDistance = place.distance_km;
+
+                // หากมีพิกัดผู้ใช้และพิกัดร้านค้า ให้คำนวณระยะทางจริงทันที
+                if (userLocation && placeLat && placeLng) {
+                    computedDistance = parseFloat(getHaversineDistance(userLocation, { lat: placeLat, lng: placeLng }).toFixed(2));
+                }
+
+                return {
+                    ...place,
+                    computed_distance: computedDistance !== undefined ? computedDistance : 999,
+                    currently_open: getStoreOpenStatus(place)
+                };
+            });
+
+            // กรองข้อมูลตามเงื่อนไขต่างๆ
             currentFilteredPlaces = rawPlaces.filter(place => {
                 if (searchQuery) {
                     const matchName = place.name ? place.name.toLowerCase().includes(searchQuery) : false;
                     const matchCat = place.category ? place.category.toLowerCase().includes(searchQuery) : false;
                     if (!matchName && !matchCat) return false;
                 }
+
                 if (catText !== 'ร้านทั้งหมด' && !catText.includes('ร้านทั้งหมด')) {
                     const pCat = (place.category || '').toLowerCase();
-                    if (!pCat.includes(catText.toLowerCase().replace(/คาเฟ่|ร้านอาหาร|เกม|อ่านหนังสือ/g, match => match))) {
-                        // ปรับแต่ง Logic Filter ตามความเหมาะสม
-                        if(catText.includes('อาหาร') && (pCat.includes('อาหาร') || pCat.includes('เครื่องดื่ม'))) return true;
-                        if(catText.includes('อ่านหนังสือ') && (pCat.includes('อ่านหนังสือ') || pCat.includes('คาเฟ่'))) return true;
-                        if(catText.includes('เกม') && pCat.includes('เกม')) return true;
-                        return false;
-                    }
+                    if (catText.includes('อาหาร') && !(pCat.includes('อาหาร') || pCat.includes('เครื่องดื่ม'))) return false;
+                    if (catText.includes('อ่านหนังสือ') && !(pCat.includes('อ่านหนังสือ') || pCat.includes('คาเฟ่'))) return false;
+                    if (catText.includes('เกม') && !pCat.includes('เกม')) return false;
                 }
-                if (isOpenChecked && place.status === 'ปิดอยู่') return false; 
+
+                // ตัวกรองเปิดอยู่
+                if (isOpenChecked && !place.currently_open) return false;
+
+                // ตัวกรองระยะทาง (ใช้งานได้จริง)
+                if (maxDistanceVal !== 'all') {
+                    const limit = parseFloat(maxDistanceVal);
+                    if (place.computed_distance > limit) return false;
+                }
+
+                // ตัวกรองคะแนน
                 if (isRatingChecked && (place.rating === undefined || place.rating < 4.0)) return false;
+
+                // ตัวกรองช่วงราคา
+                if (selectedPriceTiers.length) {
+                    const placePriceTiers = getPriceTiers(place.price_range || place.price);
+                    if (!selectedPriceTiers.some(tier => placePriceTiers.includes(tier))) return false;
+                }
+
                 return true;
             });
 
+            // จัดเรียงข้อมูล (Sort)
             if (sortVal === 'rating' || sortVal === 'คะแนนสูงสุด') {
                 currentFilteredPlaces.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             } else if (sortVal === 'distance' || sortVal === 'ระยะทางใกล้ที่สุด') {
-                currentFilteredPlaces.sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999));
+                currentFilteredPlaces.sort((a, b) => a.computed_distance - b.computed_distance);
             }
+
+            // Keep the selected order inside each group, but always lead with open stores.
+            currentFilteredPlaces.sort((a, b) => Number(b.currently_open) - Number(a.currently_open));
 
             renderPlaces();
         };
@@ -257,14 +523,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const placesToShow = currentFilteredPlaces.slice(0, displayLimit);
-            placesToShow.forEach(place => { cardGrid.innerHTML += createCardHTML(place); });
+            placesToShow.forEach(place => {
+                // นำระยะทางที่คำนวณได้จริงไปแสดงบน Card
+                const displayPlace = { ...place, distance_km: place.computed_distance !== 999 ? place.computed_distance : place.distance_km };
+                cardGrid.innerHTML += createCardHTML(displayPlace);
+            });
 
             const loadBtn = document.querySelector('.load-more-btn');
             if (loadBtn) loadBtn.style.display = (displayLimit >= currentFilteredPlaces.length) ? 'none' : 'block';
         }
 
+        // Event Listeners
         if (filterOpen) filterOpen.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
-        if (filterDistance) filterDistance.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
+
+        if (filterDistance) {
+            filterDistance.addEventListener('change', async () => {
+                if (filterDistance.value !== 'all' && !userLocation) {
+                    await getUserLocation();
+                }
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        }
+
         if (filterRating) filterRating.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
 
         document.querySelectorAll('.category-list .cat-btn').forEach(btn => {
@@ -278,9 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.price-btn-group .price-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const wasActive = btn.classList.contains('active');
-                document.querySelectorAll('.price-btn-group .price-btn').forEach(b => b.classList.remove('active'));
-                if (!wasActive) btn.classList.add('active');
+                const willBeActive = !btn.classList.contains('active');
+                btn.classList.toggle('active', willBeActive);
+                btn.setAttribute('aria-pressed', String(willBeActive));
                 displayLimit = 6;
                 fetchFilteredPlaces();
             });
@@ -298,7 +579,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const sortSelect = document.querySelector('.sort-dropdown select');
-        if (sortSelect) sortSelect.addEventListener('change', () => { displayLimit = 6; fetchFilteredPlaces(); });
+        if (sortSelect) {
+            sortSelect.addEventListener('change', async () => {
+                if (sortSelect.value === 'distance' && !userLocation) {
+                    await getUserLocation();
+                }
+                displayLimit = 6;
+                fetchFilteredPlaces();
+            });
+        }
 
         const resetBtn = document.querySelector('.reset-btn');
         if (resetBtn) {
@@ -308,9 +597,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     else b.classList.remove('active');
                 });
                 if (filterOpen) filterOpen.checked = false;
-                if (filterDistance) filterDistance.checked = false;
+                if (filterDistance) filterDistance.value = 'all';
                 if (filterRating) filterRating.checked = false;
-                document.querySelectorAll('.price-btn-group .price-btn').forEach(b => b.classList.remove('active'));
+                if (distanceStatus) distanceStatus.textContent = '';
+                document.querySelectorAll('.price-btn-group .price-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
                 document.querySelectorAll('.search-box input').forEach(input => input.value = '');
                 if (sortSelect) sortSelect.value = 'recommended';
                 displayLimit = 6;
@@ -321,9 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadBtn = document.querySelector('.load-more-btn');
         if (loadBtn) loadBtn.addEventListener('click', () => { displayLimit += 6; renderPlaces(); });
 
-        fetchFilteredPlaces();
+        // เริ่มต้นขอพิกัดผู้ใช้เบื้องต้น และโหลดรายการร้านค้า
+        getUserLocation().then(() => fetchFilteredPlaces());
+        window.setInterval(fetchFilteredPlaces, 60000);
     }
-
     // ==========================================
     // 7. จัดการข้อมูลโปรไฟล์ (profile.html)
     // ==========================================
@@ -903,7 +1197,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const categoryMatches = selectedCategory === 'all' || card.dataset.category.split(' ').includes(selectedCategory);
                 const lat = Number(card.dataset.lat);
                 const lng = Number(card.dataset.lng);
-                const distanceMatches = !maximumDistance || (userCoordinates && Number.isFinite(lat) && Number.isFinite(lng) && distanceInKm(userCoordinates, { lat, lng }) <= maximumDistance);
+                const hasCoordinates = card.dataset.lat !== undefined && card.dataset.lng !== undefined;
+                const distanceMatches = !maximumDistance || !hasCoordinates || (userCoordinates && Number.isFinite(lat) && Number.isFinite(lng) && distanceInKm(userCoordinates, { lat, lng }) <= maximumDistance);
                 const visible = categoryMatches && distanceMatches;
                 card.classList.toggle('hidden', !visible);
                 card.style.display = visible ? 'flex' : 'none';
@@ -963,14 +1258,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const formData = new FormData(activityForm);
             const activity = Object.fromEntries(formData.entries());
-            const lat = Number(activity.lat);
-            const lng = Number(activity.lng);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
             const categoryNames = { food: 'อาหาร & ตลาดนัด', sports: 'กีฬา & กิจกรรม', promo: 'โปรโมชันส่วนลด', concert: 'คอนเสิร์ต & ดนตรี' };
             const savedActivities = JSON.parse(localStorage.getItem('tu_aroi_custom_activities') || '[]');
-            savedActivities.push({ ...activity, lat, lng });
+            savedActivities.push(activity);
             localStorage.setItem('tu_aroi_custom_activities', JSON.stringify(savedActivities));
-            renderCustomActivity({ ...activity, lat, lng }, true);
+            renderCustomActivity(activity, true);
             activityForm.reset();
             activityDialog.close();
 
@@ -978,8 +1270,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = document.createElement('div');
                 card.className = 'event-card';
                 card.dataset.category = item.category;
-                card.dataset.lat = item.lat;
-                card.dataset.lng = item.lng;
                 card.innerHTML = `<div class="event-img-wrapper"><span class="event-status-badge status-upcoming">⏳ เพิ่มใหม่</span><span class="event-cat-badge">${escapeHtml(categoryNames[item.category])}</span></div><div class="event-body"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="event-meta-info"><div class="event-meta-item"><i class="fa-regular fa-calendar"></i> ${escapeHtml(item.dateTime)}</div><div class="event-meta-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(item.location)}</div></div></div>`;
                 eventsGrid.prepend(card);
                 if (shouldFilter) applyEventFilters();
@@ -991,8 +1281,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'event-card';
             card.dataset.category = activity.category;
-            card.dataset.lat = activity.lat;
-            card.dataset.lng = activity.lng;
             card.innerHTML = `<div class="event-img-wrapper"><span class="event-status-badge status-upcoming">⏳ เพิ่มใหม่</span><span class="event-cat-badge">${escapeHtml(categoryNames[activity.category])}</span></div><div class="event-body"><h3>${escapeHtml(activity.title)}</h3><p>${escapeHtml(activity.description)}</p><div class="event-meta-info"><div class="event-meta-item"><i class="fa-regular fa-calendar"></i> ${escapeHtml(activity.dateTime)}</div><div class="event-meta-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(activity.location)}</div></div></div>`;
             eventsGrid.prepend(card);
         });
