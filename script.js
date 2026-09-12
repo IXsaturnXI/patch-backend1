@@ -581,6 +581,52 @@ document.addEventListener('DOMContentLoaded', () => {
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
         });
 
+        let userLocationMarker = null;
+        let userLocationAccuracy = null;
+
+        function showUserLocation(position, shouldCenter = true) {
+            const { latitude, longitude, accuracy } = position.coords;
+            const latLng = [latitude, longitude];
+
+            if (userLocationMarker) map.removeLayer(userLocationMarker);
+            if (userLocationAccuracy) map.removeLayer(userLocationAccuracy);
+
+            userLocationAccuracy = L.circle(latLng, {
+                radius: accuracy || 0,
+                color: '#2563eb',
+                fillColor: '#60a5fa',
+                fillOpacity: 0.18,
+                weight: 1
+            }).addTo(map);
+            userLocationMarker = L.circleMarker(latLng, {
+                radius: 8,
+                color: '#ffffff',
+                fillColor: '#2563eb',
+                fillOpacity: 1,
+                weight: 3
+            }).addTo(map).bindPopup('ตำแหน่งของคุณ');
+
+            if (shouldCenter) map.setView(latLng, 16);
+        }
+
+        function locateUser(shouldCenter = true, onSuccess, onError) {
+            if (!navigator.geolocation) {
+                if (onError) onError(new Error('Geolocation is not supported'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    showUserLocation(position, shouldCenter);
+                    if (onSuccess) onSuccess(position);
+                },
+                error => {
+                    console.warn('Unable to retrieve user location:', error);
+                    if (onError) onError(error);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }
+
         // ฟังก์ชันดึงพิกัดจากลิงก์ Google Map (รับมือกับข้อมูล CSV)
         function extractLatLng(url) {
             if (!url) return null;
@@ -704,18 +750,20 @@ document.addEventListener('DOMContentLoaded', () => {
             resetLocBtn.addEventListener('click', () => {
                 if (!navigator.geolocation) return alert('เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง');
                 resetLocBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+                locateUser(true,
+                    () => {
                         resetLocBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> ตำแหน่งของฉัน';
                     },
-                    (err) => {
+                    () => {
                         alert('ไม่สามารถเข้าถึงตำแหน่งได้');
                         resetLocBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> ตำแหน่งของฉัน';
                     }
                 );
             });
         }
+
+        // Restore the marker for visitors who have already granted location access.
+        locateUser(false);
 
         map.on('click', (e) => {
             if (!isAddMode) return;
@@ -824,29 +872,129 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 11. ระบบกรองกิจกรรม (events.html)
+    // 11. ระบบกิจกรรม: สิทธิ์เพิ่มกิจกรรมและตัวกรองระยะทาง (events.html)
     // ==========================================
-    const filterPills = document.querySelectorAll('.tag-pill');
-    const eventCards = document.querySelectorAll('.event-card');
-    
-    if (filterPills.length > 0 && eventCards.length > 0) {
-        filterPills.forEach(pill => {
-            pill.addEventListener('click', () => {
-                filterPills.forEach(btn => btn.classList.remove('active'));
-                pill.classList.add('active');
-                const selectedCategory = pill.getAttribute('data-category');
-                
-                eventCards.forEach(card => {
-                    const cardCategories = card.getAttribute('data-category');
-                    if (selectedCategory === 'all' || cardCategories.includes(selectedCategory)) {
-                        card.classList.remove('hidden');
-                        card.style.display = 'flex'; // สมมติว่าโครงสร้างเก่าเป็น flex
-                    } else {
-                        card.classList.add('hidden');
-                        card.style.display = 'none';
-                    }
-                });
+    const eventsPage = document.getElementById('events-page');
+    if (eventsPage) {
+        const filterPills = document.querySelectorAll('.tag-pill');
+        const distanceSelect = document.getElementById('event-distance-range');
+        const locateEventsBtn = document.getElementById('event-use-location');
+        const locationStatus = document.getElementById('event-location-status');
+        const addActivityBtn = document.getElementById('add-activity-btn');
+        const activityDialog = document.getElementById('add-activity-dialog');
+        const activityForm = document.getElementById('add-activity-form');
+        const closeActivityDialog = document.getElementById('close-activity-dialog');
+        const eventsGrid = document.querySelector('.events-grid');
+        let selectedCategory = 'all';
+        let userCoordinates = null;
+
+        const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+        const distanceInKm = (a, b) => {
+            const toRadians = degrees => degrees * Math.PI / 180;
+            const dLat = toRadians(b.lat - a.lat);
+            const dLng = toRadians(b.lng - a.lng);
+            const value = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat)) * Math.sin(dLng / 2) ** 2;
+            return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
+        };
+
+        function applyEventFilters() {
+            const maximumDistance = distanceSelect.value === 'all' ? null : Number(distanceSelect.value);
+            document.querySelectorAll('.event-card').forEach(card => {
+                const categoryMatches = selectedCategory === 'all' || card.dataset.category.split(' ').includes(selectedCategory);
+                const lat = Number(card.dataset.lat);
+                const lng = Number(card.dataset.lng);
+                const distanceMatches = !maximumDistance || (userCoordinates && Number.isFinite(lat) && Number.isFinite(lng) && distanceInKm(userCoordinates, { lat, lng }) <= maximumDistance);
+                const visible = categoryMatches && distanceMatches;
+                card.classList.toggle('hidden', !visible);
+                card.style.display = visible ? 'flex' : 'none';
             });
+        }
+
+        function requestEventLocation() {
+            if (!navigator.geolocation) {
+                locationStatus.textContent = 'เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง';
+                return;
+            }
+            locateEventsBtn.disabled = true;
+            locationStatus.textContent = 'กำลังค้นหาตำแหน่ง...';
+            navigator.geolocation.getCurrentPosition(position => {
+                userCoordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
+                locationStatus.textContent = 'กำลังกรองตามตำแหน่งของคุณ';
+                locateEventsBtn.disabled = false;
+                applyEventFilters();
+            }, () => {
+                locationStatus.textContent = 'ไม่สามารถเข้าถึงตำแหน่งได้';
+                locateEventsBtn.disabled = false;
+                distanceSelect.value = 'all';
+                applyEventFilters();
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+        }
+
+        filterPills.forEach(pill => pill.addEventListener('click', () => {
+            filterPills.forEach(button => button.classList.remove('active'));
+            pill.classList.add('active');
+            selectedCategory = pill.dataset.category;
+            applyEventFilters();
+        }));
+        locateEventsBtn.addEventListener('click', requestEventLocation);
+        distanceSelect.addEventListener('change', () => {
+            if (distanceSelect.value !== 'all' && !userCoordinates) requestEventLocation();
+            else applyEventFilters();
+        });
+
+        async function updateActivityCreationAccess() {
+            if (!supabaseClient) return;
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            addActivityBtn.hidden = !(session && session.user);
+        }
+        updateActivityCreationAccess().catch(() => { addActivityBtn.hidden = true; });
+
+        addActivityBtn.addEventListener('click', () => activityDialog.showModal());
+        closeActivityDialog.addEventListener('click', () => activityDialog.close());
+
+        activityForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (!supabaseClient) return;
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session || !session.user) {
+                activityDialog.close();
+                addActivityBtn.hidden = true;
+                return;
+            }
+            const formData = new FormData(activityForm);
+            const activity = Object.fromEntries(formData.entries());
+            const lat = Number(activity.lat);
+            const lng = Number(activity.lng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+            const categoryNames = { food: 'อาหาร & ตลาดนัด', sports: 'กีฬา & กิจกรรม', promo: 'โปรโมชันส่วนลด', concert: 'คอนเสิร์ต & ดนตรี' };
+            const savedActivities = JSON.parse(localStorage.getItem('tu_aroi_custom_activities') || '[]');
+            savedActivities.push({ ...activity, lat, lng });
+            localStorage.setItem('tu_aroi_custom_activities', JSON.stringify(savedActivities));
+            renderCustomActivity({ ...activity, lat, lng }, true);
+            activityForm.reset();
+            activityDialog.close();
+
+            function renderCustomActivity(item, shouldFilter) {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.dataset.category = item.category;
+                card.dataset.lat = item.lat;
+                card.dataset.lng = item.lng;
+                card.innerHTML = `<div class="event-img-wrapper"><span class="event-status-badge status-upcoming">⏳ เพิ่มใหม่</span><span class="event-cat-badge">${escapeHtml(categoryNames[item.category])}</span></div><div class="event-body"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="event-meta-info"><div class="event-meta-item"><i class="fa-regular fa-calendar"></i> ${escapeHtml(item.dateTime)}</div><div class="event-meta-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(item.location)}</div></div></div>`;
+                eventsGrid.prepend(card);
+                if (shouldFilter) applyEventFilters();
+            }
+        });
+
+        JSON.parse(localStorage.getItem('tu_aroi_custom_activities') || '[]').forEach(activity => {
+            const categoryNames = { food: 'อาหาร & ตลาดนัด', sports: 'กีฬา & กิจกรรม', promo: 'โปรโมชันส่วนลด', concert: 'คอนเสิร์ต & ดนตรี' };
+            const card = document.createElement('div');
+            card.className = 'event-card';
+            card.dataset.category = activity.category;
+            card.dataset.lat = activity.lat;
+            card.dataset.lng = activity.lng;
+            card.innerHTML = `<div class="event-img-wrapper"><span class="event-status-badge status-upcoming">⏳ เพิ่มใหม่</span><span class="event-cat-badge">${escapeHtml(categoryNames[activity.category])}</span></div><div class="event-body"><h3>${escapeHtml(activity.title)}</h3><p>${escapeHtml(activity.description)}</p><div class="event-meta-info"><div class="event-meta-item"><i class="fa-regular fa-calendar"></i> ${escapeHtml(activity.dateTime)}</div><div class="event-meta-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(activity.location)}</div></div></div>`;
+            eventsGrid.prepend(card);
         });
     }
 });

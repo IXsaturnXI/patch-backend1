@@ -13,7 +13,7 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body id="events-page">
     <header class="navbar">
         <div class="logo">TU Aroi</div>
         <nav class="nav-links">
@@ -35,8 +35,13 @@
     <main class="container" style="flex-direction: column; padding: 30px 20px;">
         <!-- Header Section -->
         <div class="events-header">
-            <h2 class="events-title">🎉 งานและกิจกรรมภายในมหาวิทยาลัย</h2>
-            <p class="events-subtitle">รวบรวมกิจกรรม ตลาดนัด งานคอนเสิร์ต และส่วนลดพิเศษสำหรับชาวธรรมศาสตร์</p>
+            <div>
+                <h2 class="events-title">🎉 งานและกิจกรรมภายในมหาวิทยาลัย</h2>
+                <p class="events-subtitle">รวบรวมกิจกรรม ตลาดนัด งานคอนเสิร์ต และส่วนลดพิเศษสำหรับชาวธรรมศาสตร์</p>
+            </div>
+            <button id="add-activity-btn" class="btn-primary-red" type="button" hidden>
+                <i class="fa-solid fa-plus"></i> เพิ่มกิจกรรม
+            </button>
         </div>
 
         <!-- Filter Tags -->
@@ -49,11 +54,23 @@
             <button class="tag-pill" data-category="concert">🎵 คอนเสิร์ต & ดนตรี</button>
         </div>
 
+        <div class="event-distance-filter" aria-label="กรองกิจกรรมตามระยะทาง">
+            <label for="event-distance-range"><i class="fa-solid fa-location-crosshairs"></i> ระยะทางจากตำแหน่งของคุณ</label>
+            <select id="event-distance-range">
+                <option value="all">ทุกระยะทาง</option>
+                <option value="1">ไม่เกิน 1 กม.</option>
+                <option value="3">ไม่เกิน 3 กม.</option>
+                <option value="5">ไม่เกิน 5 กม.</option>
+            </select>
+            <button id="event-use-location" type="button" class="map-control-btn">ใช้ตำแหน่งของฉัน</button>
+            <span id="event-location-status" class="event-location-status" aria-live="polite"></span>
+        </div>
+
         <!-- Events Grid -->
         <div class="events-grid">
 
             <!-- Card 1 -->
-            <div class="event-card" data-category="food ongoing">
+            <div class="event-card" data-category="food ongoing" data-lat="14.07349" data-lng="100.60238">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=600" alt="TU Food Fair 2026">
                     <span class="event-status-badge status-ongoing">🔥 กำลังจัดอยู่</span>
@@ -71,7 +88,7 @@
             </div>
 
             <!-- Card 2 -->
-            <div class="event-card" data-category="sports">
+            <div class="event-card" data-category="sports" data-lat="14.07117" data-lng="100.60741">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600" alt="TU Cup 2026">
                     <span class="event-status-badge status-upcoming">⏳ เร็วๆ นี้</span>
@@ -89,7 +106,7 @@
             </div>
 
             <!-- Card 3 -->
-            <div class="event-card" data-category="promo">
+            <div class="event-card" data-category="promo" data-lat="14.07934" data-lng="100.59914">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600" alt="Shabu Buffet Promo">
                     <span class="event-status-badge status-promo">🏷️ ส่วนลดพิเศษ</span>
@@ -107,7 +124,7 @@
             </div>
 
             <!-- Card 4 -->
-            <div class="event-card" data-category="concert">
+            <div class="event-card" data-category="concert" data-lat="14.07199" data-lng="100.60253">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600" alt="Music in the Park">
                     <span class="event-status-badge status-upcoming">⏳ เร็วๆ นี้</span>
@@ -125,7 +142,7 @@
             </div>
 
             <!-- Card 5 -->
-            <div class="event-card" data-category="food ongoing">
+            <div class="event-card" data-category="food ongoing" data-lat="14.07862" data-lng="100.59748">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=600" alt="Chiangraak Night Market">
                     <span class="event-status-badge status-ongoing">🔥 กำลังจัดอยู่</span>
@@ -143,7 +160,7 @@
             </div>
 
             <!-- Card 6 -->
-            <div class="event-card" data-category="sports">
+            <div class="event-card" data-category="sports" data-lat="14.07728" data-lng="100.60372">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&q=80&w=600" alt="Board Game Night">
                     <span class="event-status-badge status-upcoming">⏳ เร็วๆ นี้</span>
@@ -161,7 +178,7 @@
             </div>
 
             <!-- Card 7 -->
-            <div class="event-card" data-category="promo">
+            <div class="event-card" data-category="promo" data-lat="14.07322" data-lng="100.60013">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=600" alt="Co-Working Cafe Discount">
                     <span class="event-status-badge status-promo">🏷️ ส่วนลดพิเศษ</span>
@@ -179,7 +196,7 @@
             </div>
 
             <!-- Card 8 -->
-            <div class="event-card" data-category="concert">
+            <div class="event-card" data-category="concert" data-lat="14.06865" data-lng="100.60594">
                 <div class="event-img-wrapper">
                     <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600" alt="TU Freshy Fest">
                     <span class="event-status-badge status-upcoming">⏳ เร็วๆ นี้</span>
@@ -198,6 +215,30 @@
 
         </div>
     </main>
+
+    <dialog id="add-activity-dialog" class="activity-dialog">
+        <form id="add-activity-form" method="dialog">
+            <div class="activity-dialog-header">
+                <h3>เพิ่มกิจกรรมใหม่</h3>
+                <button id="close-activity-dialog" type="button" class="activity-dialog-close" aria-label="ปิด">&times;</button>
+            </div>
+            <label>ชื่อกิจกรรม<input name="title" required maxlength="100"></label>
+            <label>รายละเอียด<textarea name="description" required maxlength="500"></textarea></label>
+            <label>สถานที่<input name="location" required maxlength="150"></label>
+            <div class="activity-form-grid">
+                <label>หมวดหมู่
+                    <select name="category"><option value="food">อาหาร & ตลาดนัด</option><option value="sports">กีฬา & กิจกรรม</option><option value="promo">โปรโมชันส่วนลด</option><option value="concert">คอนเสิร์ต & ดนตรี</option></select>
+                </label>
+                <label>วัน / เวลา<input name="dateTime" required maxlength="100" placeholder="เช่น 20 มีนาคม 2026, 16:00 น."></label>
+            </div>
+            <div class="activity-form-grid">
+                <label>ละติจูด<input name="lat" type="number" step="any" required></label>
+                <label>ลองจิจูด<input name="lng" type="number" step="any" required></label>
+            </div>
+            <p class="activity-location-help">ระบุพิกัดเพื่อให้กิจกรรมนี้ค้นหาได้ด้วยตัวกรองระยะทาง</p>
+            <button class="btn-primary-red" type="submit">บันทึกกิจกรรม</button>
+        </form>
+    </dialog>
 
     <footer class="footer-simple">
         © 2026 TU Aroi . Built for the academic community.

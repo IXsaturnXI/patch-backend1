@@ -772,6 +772,10 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
 
 .events-header {
     margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .events-title {
@@ -817,6 +821,47 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
     color: #ffffff;
     border-color: var(--primary-red);
 }
+
+.event-distance-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: -10px 0 25px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.event-distance-filter select {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-main);
+}
+
+.event-distance-filter .map-control-btn { padding: 8px 12px; font-size: 13px; }
+.event-location-status { min-height: 1em; }
+
+.activity-dialog {
+    width: min(92vw, 560px);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 0;
+    background: var(--card-bg);
+    color: var(--text-main);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+}
+.activity-dialog::backdrop { background: rgba(0, 0, 0, .48); }
+.activity-dialog form { display: grid; gap: 12px; padding: 22px; }
+.activity-dialog label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.activity-dialog input, .activity-dialog textarea, .activity-dialog select { padding: 9px 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font: inherit; }
+.activity-dialog textarea { min-height: 90px; resize: vertical; }
+.activity-dialog-header { display: flex; align-items: center; justify-content: space-between; }
+.activity-dialog-header h3 { margin: 0; }
+.activity-dialog-close { border: 0; background: transparent; color: var(--text-muted); font-size: 28px; line-height: 1; cursor: pointer; }
+.activity-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.activity-location-help { margin: -4px 0 0; color: var(--text-muted); font-size: 12px; }
 
 /* Events Grid */
 .events-grid {
