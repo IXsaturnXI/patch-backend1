@@ -1031,3 +1031,527 @@ body.dark-mode .card-info .store-status.is-closed { background: #343a40; color: 
     color: var(--primary-red);
     width: 14px;
 }
+
+
+/* ==========================================
+   Sprint 2 Enhancements (S2-01, S2-02, S2-03)
+   รักษา UX/UI และโทนสีเดิม เพิ่มเติมองค์ประกอบข้อมูลเชิงลึก
+   ========================================== */
+
+/* S2-01: Search Card Deep Info & Layout */
+.card-image .badge-price-tier {
+    bottom: 10px;
+    left: 10px;
+    background: rgba(18, 18, 18, 0.82);
+    color: var(--accent-gold);
+    backdrop-filter: blur(4px);
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.card-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.card-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 8px 0 12px;
+    padding: 8px 10px;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-meta-item i {
+    color: var(--primary-red);
+    width: 13px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* S2-01: Detail Page Gallery & Deep Info */
+.detail-cover-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.detail-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    backdrop-filter: blur(6px);
+}
+
+.detail-meta-pill.rating-pill {
+    background: rgba(252, 165, 17, 0.95);
+    color: #121212;
+}
+
+.detail-meta-pill.price-pill {
+    background: rgba(18, 18, 18, 0.78);
+    color: var(--accent-gold);
+}
+
+.detail-meta-pill.status-open {
+    background: rgba(22, 101, 52, 0.9);
+    color: #dcfce7;
+}
+
+.detail-meta-pill.status-closed {
+    background: rgba(104, 112, 122, 0.85);
+    color: #f1f3f5;
+}
+
+.detail-gallery-bar {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    overflow-x: auto;
+    align-items: center;
+}
+
+.detail-gallery-thumb {
+    width: 76px;
+    height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+    opacity: 0.75;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.detail-gallery-thumb:hover,
+.detail-gallery-thumb.active {
+    opacity: 1;
+    border-color: var(--primary-red);
+    transform: translateY(-1px);
+}
+
+.detail-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text-main);
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.detail-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-info-row i {
+    color: var(--primary-red);
+    margin-top: 3px;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.detail-info-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 75px;
+    flex-shrink: 0;
+}
+
+.detail-features-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.feature-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-main);
+}
+
+.feature-tag-chip i {
+    color: var(--accent-gold);
+    font-size: 11px;
+}
+
+/* S2-02: Real-time Review & Rating Summary */
+.review-summary-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 14px 18px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.review-summary-score {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.review-score-number {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent-gold);
+    line-height: 1;
+}
+
+.review-item.new-review-highlight {
+    animation: highlightNewReview 2.2s ease-out;
+}
+
+@keyframes highlightNewReview {
+    0% {
+        background-color: rgba(252, 165, 17, 0.22);
+        transform: translateY(-4px);
+    }
+    100% {
+        background-color: transparent;
+        transform: translateY(0);
+    }
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: var(--card-bg);
+    color: var(--text-main);
+    border-left: 4px solid var(--primary-red);
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* S2-03: Google Profile Badge & Random History */
+.google-account-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(66, 133, 244, 0.12);
+    color: #4285F4;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 3px;
+    width: fit-content;
+}
+
+.history-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.btn-clear-history {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-clear-history:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+}
+
+.history-time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--input-bg);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+
+/* ==========================================
+   Layout & Overflow Fix (search.html / Card Grid & Sidebar)
+   ป้องกันการเลื่อนซ้าย-ขวา บังคับการ์ดไม่ให้ล้น Header และล็อกขนาด Sidebar ให้สมส่วน
+   ========================================== */
+html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+.navbar {
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+.container {
+    display: flex;
+    align-items: flex-start;
+    max-width: 1240px;
+    width: 100%;
+    margin: 24px auto;
+    padding: 0 24px;
+    gap: 24px;
+    box-sizing: border-box;
+}
+
+.sidebar {
+    flex: 0 0 265px;
+    width: 265px;
+    min-width: 265px;
+    max-width: 265px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.quick-filters {
+    padding: 14px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.price-filter-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.quick-filters .price-btn-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.quick-filters .price-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 7px 4px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.content {
+    flex: 1 1 0%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.card-link {
+    min-width: 0;
+    max-width: 100%;
+    display: block;
+}
+
+.card {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.card-image {
+    position: relative;
+    height: 138px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.card-info {
+    padding: 12px 14px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.card-info h3 {
+    font-size: 14.5px;
+    line-height: 1.35;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.card-info .desc {
+    font-size: 11.5px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 6px 0 10px;
+    padding: 7px 9px;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.card-meta-item > span {
+    display: block;
+    flex: 1 1 0%;
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.card-footer > span:first-child {
+    flex: 1 1 0%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-footer .price {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 11px;
+}
+
+@media (max-width: 1080px) {
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 0 16px;
+    }
+    .sidebar {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+    .card-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
