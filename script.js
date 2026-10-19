@@ -211,16 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const FALLBACK_FOOD_IMAGES = [
-        'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800',
         'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800',
         'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800',
         'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&q=80&w=800'
+        'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'
     ];
 
     function cleanTextValue(val) {
@@ -231,23 +225,100 @@ document.addEventListener('DOMContentLoaded', () => {
         return s;
     }
 
-    // ปรับความละเอียดรูปภาพจาก Google Maps Thumbnail ให้คมชัดระดับ HD
-    function resolveHighResImage(rawUrl, seedId = 1) {
-        const fallback = FALLBACK_FOOD_IMAGES[Math.abs(Number(seedId) || 1) % FALLBACK_FOOD_IMAGES.length];
-        if (!rawUrl || typeof rawUrl !== 'string') return fallback;
-        const url = rawUrl.trim();
-        if (url.includes('default_user.png')) return fallback;
-        // หากเป็นลิงก์หน้าเว็บโซเชียลที่ไม่ใช่ไฟล์รูปโดยตรง ให้ใช้รูปอาหารคุณภาพสูงแทน
+    // เลือกรูปค่ากลางที่ตรงกับประเภทร้านและชื่อร้านนั้นๆ (ใช้เฉพาะกรณีที่ร้านไม่มีรูปจาก Google Maps หรือลิงก์รูปเสีย)
+    function getRelevantFallbackImage(placeOrId) {
+        if (typeof placeOrId !== 'object' || placeOrId === null) {
+            const idx = Math.abs(Number(placeOrId) || 1) % FALLBACK_FOOD_IMAGES.length;
+            return FALLBACK_FOOD_IMAGES[idx];
+        }
+        const idNum = Math.abs(Number(placeOrId.id) || 1);
+        const name = String(placeOrId.name || '').toLowerCase();
+        const cat = String(placeOrId.category || '').toLowerCase();
+        const feat = String(placeOrId.features || '').toLowerCase();
+        const snip = String(placeOrId.review_snippet || '').toLowerCase();
+        const comm = String(placeOrId.review_comment || '').toLowerCase();
+        const text = `${name} ${cat} ${feat} ${snip} ${comm}`;
+
+        // 1. บอร์ดเกมคาเฟ่
+        if (text.includes('board') || text.includes('บอร์ดเกม') || text.includes('onboard') || text.includes('tsuki')) {
+            return 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&q=80&w=800';
+        }
+        // 2. มัทฉะ / ชาเขียวญี่ปุ่น
+        if (text.includes('matcha') || text.includes('มัทฉะ') || text.includes('มัจฉะ') || text.includes('kojicha') || text.includes('after peach')) {
+            return 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&q=80&w=800';
+        }
+        // 3. ชานมไข่มุก / ชาไทย / ชาผลไม้
+        if (text.includes('boba') || text.includes('ชาตรามือ') || text.includes('ชาดง') || text.includes('ชาใต้') || text.includes('ชานม') || text.includes('fucha') || text.includes('fu cha') || text.includes('snowtee') || text.includes('why cha') || text.includes('yen yen') || text.includes('yodcha') || text.includes('rakun') || text.includes('จง ชง ดี')) {
+            return 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&q=80&w=800';
+        }
+        // 4. นมสด / ปังปิ้ง / โทสต์ / บิงซู / ของหวาน
+        if (text.includes('นมสด') || text.includes('นอ•มอ•นม') || text.includes('น้ำนมหนม') || text.includes('บิงซู') || text.includes('โทสต์') || text.includes('ปังเย็น') || text.includes('sweet secret') || text.includes('เครป') || text.includes('ice house')) {
+            return 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&q=80&w=800';
+        }
+        // 5. น้ำผลไม้ปั่น / สมูทตี้
+        if (text.includes('ปั่นแหลก') || text.includes('น้ำผลไม้ปั่น') || text.includes('สมูทตี้') || text.includes('happy drink')) {
+            return 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&q=80&w=800';
+        }
+        // 6. เบเกอรี่ / เค้ก / โฮมคาเฟ่
+        if (text.includes('bakery') || text.includes('เบเกอรี่') || text.includes('bake@dome') || text.includes('เค้ก') || text.includes('ละเมียด') || text.includes('โทกิ')) {
+            return 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=800';
+        }
+        // 7. หมูกระทะ / ชาบู / ปิ้งย่าง / สุกี้
+        if (text.includes('หมูกระทะ') || text.includes('หมูกะทะ') || text.includes('ชาบู') || text.includes('shabu') || text.includes('ย่างเนย') || text.includes('ปิ้งย่าง') || text.includes('หม้อไฟ') || text.includes('จิ้มจุ่ม')) {
+            return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800';
+        }
+        // 8. อาหารญี่ปุ่น / ซูชิ / ซาชิมิ / ข้าวด้ง
+        if (text.includes('sushi') || text.includes('ซูชิ') || text.includes('ซาชิมิ') || text.includes('โอชิเน') || text.includes('ดงมาชิ') || text.includes('เทปันยากิ') || text.includes('ญี่ปุ่น')) {
+            return 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=800';
+        }
+        // 9. สเต็ก / อิตาเลียน / พิซซ่า / ข้าวหน้าเนื้อ
+        if (text.includes('steak') || text.includes('สเต็ก') || text.includes('italian') || text.includes('พิซซ่า') || text.includes('พันเนื้อ') || text.includes('เนื้อดรายเอจ')) {
+            return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800';
+        }
+        // 10. ส้มตำ / ยำ / อาหารไทย / ตามสั่ง / ก๋วยเตี๋ยว / ข้าวมันไก่
+        if (text.includes('ส้มตำ') || text.includes('ยำ') || text.includes('ลาบ') || text.includes('กะเพรา') || text.includes('ข้าวมันไก่') || text.includes('ก๋วยเตี๋ยว') || text.includes('ครัว') || text.includes('บ้านจิบ') || text.includes('อาหารใต้') || text.includes('ตามสั่ง') || text.includes('กรีนแคนทีน')) {
+            return 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&q=80&w=800';
+        }
+        // 11. ตลาดนัดและคอมมูนิตี้มอลล์
+        if (cat.includes('ตลาด') || cat.includes('ศูนย์การค้า') || text.includes('market') || text.includes('พลาซา') || text.includes('u-village')) {
+            return 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=800';
+        }
+        // 12. บาร์ / ผับ / ร้านนั่งชิล
+        if (cat.includes('บาร์') || cat.includes('ผับ') || text.includes('bar') || text.includes('club') || text.includes('วงเหล้า')) {
+            return 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800';
+        }
+
+        // 13. คาเฟ่และร้านกาแฟทั่วไป (หมุนเวียนรูปร้านกาแฟ/เอสเปรสโซ่บาร์ที่ตรงหมวดหมู่คาเฟ่ 100%)
+        const cafePhotos = [
+            'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&q=80&w=800'
+        ];
+        return cafePhotos[idNum % cafePhotos.length];
+    }
+
+    // ดึงรูปหน้าปกเริ่มต้นจาก Google Maps ของแหล่งที่มาร้านนั้นๆ เป็นอันดับแรก
+    // หากร้านนั้นไม่มีรูป หรือลิงก์ไม่ใช่รูปภาพ ให้ใช้รูปค่ากลางที่เกี่ยวข้องกับร้านนั้นๆ แทน
+    function resolveHighResImage(rawUrl, placeOrSeed = 1) {
+        const fallback = getRelevantFallbackImage(placeOrSeed);
+        let urlCandidate = rawUrl;
+        if ((!urlCandidate || typeof urlCandidate !== 'string') && typeof placeOrSeed === 'object' && placeOrSeed !== null) {
+            urlCandidate = placeOrSeed.image_url || placeOrSeed.image || placeOrSeed.photo_url || placeOrSeed['รูป'] || '';
+        }
+        if (!urlCandidate || typeof urlCandidate !== 'string') return fallback;
+
+        const url = urlCandidate.trim();
+        if (!url || url === '·' || url === '-' || url.includes('default_user.png')) return fallback;
+
+        // หากเป็นลิงก์หน้าเว็บโซเชียลที่ไม่ใช่ไฟล์รูปภาพโดยตรง ให้ใช้รูปค่ากลางที่ตรงกับประเภทร้านแทน
         if (url.includes('instagram.com/') || url.includes('tiktok.com/') || url.includes('facebook.com/') || url.includes('wongnai.com/restaurants/')) {
             return fallback;
         }
-        // คงพารามิเตอร์ต้นฉบับสำหรับ gps-cs-s เพื่อไม่ให้ลายเซ็น URL เสีย
-        if (url.includes('googleusercontent.com') && !url.includes('gps-cs-s')) {
-            return url.replace(/=w\d+-h\d+[^&]*/, '=w800-h600-k-no');
-        }
-        if (url.includes('streetviewpixels-pa.googleapis.com')) {
-            return url.replace(/w=\d+&h=\d+/, 'w=800&h=600');
-        }
+
+        // ใช้ URL รูปจาก Google Maps (googleusercontent.com / streetviewpixels) ของร้านนั้นๆ เป็นอันดับแรกโดยไม่แก้ลายเซ็นพารามิเตอร์
         return url;
     }
 
@@ -528,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category: place.category || 'ร้านอาหารและคาเฟ่',
             rating: rating || '4.5',
             price_range: priceInfo.fullLabel,
-            image_url: resolveHighResImage(place.image_url, place.id),
+            image_url: resolveHighResImage(place.image_url, place),
             address: getPlaceAddress(place),
             phone: getPlacePhone(place),
             randomized_at: new Date().toISOString()
@@ -715,8 +786,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const priceInfo = getPriceDisplayInfo(place);
         const { rating, reviewCount } = getEffectivePlaceRatingAndCount(place);
-        const imgUrl = resolveHighResImage(place.image_url, place.id);
-        const fallbackImg = FALLBACK_FOOD_IMAGES[Math.abs(Number(place.id) || 1) % FALLBACK_FOOD_IMAGES.length];
+        const imgUrl = resolveHighResImage(place.image_url, place);
+        const fallbackImg = getRelevantFallbackImage(place);
         const addressText = getPlaceAddress(place);
         const phoneText = getPlacePhone(place);
         const menus = getPlaceRecommendedMenus(place);
@@ -1517,14 +1588,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const pageTitle = document.getElementById('detail-page-title');
         if (pageTitle) pageTitle.textContent = `${place.name} - TU Aroi`;
 
-        const coverImgUrl = resolveHighResImage(place.image_url, place.id);
+        const relevantFallbackImg = getRelevantFallbackImage(place);
+        const coverImgUrl = resolveHighResImage(place.image_url, place);
         const coverImgEl = document.getElementById('detail-cover-image');
         if (coverImgEl) {
-            coverImgEl.src = coverImgUrl;
+            coverImgEl.referrerPolicy = 'no-referrer';
             coverImgEl.onerror = function () {
                 this.onerror = null;
-                this.src = FALLBACK_FOOD_IMAGES[0];
+                this.src = relevantFallbackImg;
             };
+            coverImgEl.src = coverImgUrl;
         }
 
         const { rating, reviewCount } = getEffectivePlaceRatingAndCount(place);
@@ -1637,7 +1710,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ].filter((u, idx, arr) => u && arr.indexOf(u) === idx).slice(0, 8);
 
             galleryContainer.innerHTML = galleryUrls.map((url, idx) => `
-                <img src="${url}" alt="ภาพร้าน ${idx + 1}" class="detail-gallery-thumb ${idx === 0 ? 'active' : ''}" onerror="this.style.display='none'">
+                <img src="${url}" alt="ภาพร้าน ${idx + 1}" referrerpolicy="no-referrer" class="detail-gallery-thumb ${idx === 0 ? 'active' : ''}" onerror="this.onerror=null; if(${idx === 0}) { this.src='${relevantFallbackImg}'; } else { this.style.display='none'; }">
             `).join('');
 
             galleryContainer.querySelectorAll('.detail-gallery-thumb').forEach(thumb => {
@@ -2121,13 +2194,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (coords && !Number.isNaN(coords.lat) && !Number.isNaN(coords.lng)) {
                     const marker = L.marker([coords.lat, coords.lng], { icon: redIcon }).addTo(map);
-                    const imageUrl = resolveHighResImage(place.image_url, place.id);
+                    const imageUrl = resolveHighResImage(place.image_url, place);
+                    const mapFallbackImg = getRelevantFallbackImage(place);
                     const priceInfo = getPriceDisplayInfo(place);
                     const { rating } = getEffectivePlaceRatingAndCount(place);
 
                     const popupContent = `
                         <div style="font-family: 'Kanit', sans-serif; padding: 0px; width: 220px;">
-                            <img src="${imageUrl}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" alt="${place.name}" onerror="this.onerror=null; this.src='${FALLBACK_FOOD_IMAGES[0]}';">
+                            <img src="${imageUrl}" referrerpolicy="no-referrer" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" alt="${place.name}" onerror="this.onerror=null; this.src='${mapFallbackImg}';">
                             <h4 style="margin: 0 0 4px 0; color: var(--primary-red, #e63946); font-size: 15px;">${place.name}</h4>
                             <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;"><i class="fa-solid fa-tag"></i> ${place.category || 'ร้านค้า'} • 💰 ${priceInfo.symbol}</p>
                             <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 500;">⭐ ${rating}</p>
@@ -2281,8 +2355,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateCardData = () => {
                 document.getElementById('res-title').textContent = selected.name;
                 const resImg = document.getElementById('res-img');
-                resImg.src = resolveHighResImage(selected.image_url, selected.id);
-                resImg.onerror = function () { this.onerror = null; this.src = FALLBACK_FOOD_IMAGES[2]; };
+                resImg.referrerPolicy = 'no-referrer';
+                resImg.onerror = function () { this.onerror = null; this.src = getRelevantFallbackImage(selected); };
+                resImg.src = resolveHighResImage(selected.image_url, selected);
                 document.getElementById('res-rating').textContent = rating;
                 document.getElementById('res-cat').textContent = selected.category || 'ร้านค้า';
                 document.getElementById('res-price').textContent = priceInfo.fullLabel;
