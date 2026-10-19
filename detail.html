@@ -13,9 +13,9 @@
     <header class="navbar">
         <div class="logo">TU Aroi</div>
         <nav class="nav-links">
-            <a href="search.html">ค้นพบ</a>
+            <a href="search.html" class="active">ค้นพบ</a>
             <a href="profile.html">บันทึกไว้</a>
-            <a href="events.html" class="active">กิจกรรม</a>
+            <a href="events.html">กิจกรรม</a>
             <a href="map.html">แผนที่วิทยาเขต</a>
             <a href="random.html" class="nav-random">สุ่มดวง</a>
         </nav>
@@ -31,55 +31,120 @@
     <div class="detail-container">
         <a href="search.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> กลับไปหน้าค้นหาร้านค้า</a>
 
+        <!-- S2-01: ปรับ Layout การแสดงผลรูปภาพและข้อมูลเชิงลึกให้ละเอียดขึ้น -->
         <div class="detail-header-card">
             <div class="detail-cover">
                 <img id="detail-cover-image" src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=1200" alt="สถานที่">
                 <div class="detail-cover-overlay">
-                    <span id="detail-category" class="detail-tag">สถานที่</span>
+                    <div class="detail-cover-badges">
+                        <span id="detail-category" class="detail-tag" style="margin-bottom: 0;">สถานที่</span>
+                        <span id="detail-rating-badge" class="detail-meta-pill rating-pill">⭐ -</span>
+                        <span id="detail-price-badge" class="detail-meta-pill price-pill">$$</span>
+                        <span id="detail-open-badge" class="detail-meta-pill status-open">กำลังตรวจสอบเวลา...</span>
+                    </div>
                     <h1 id="detail-name">กำลังโหลดรายละเอียด...</h1>
                     <p id="detail-summary"></p>
                 </div>
             </div>
+            <!-- แกลเลอรีรูปภาพเพิ่มเติมของร้านและรีวิว -->
+            <div id="detail-gallery" class="detail-gallery-bar"></div>
         </div>
 
         <div class="detail-grid">
             <div>
                 <div class="info-box">
-                    <h3><i class="fa-regular fa-clock" style="color: var(--primary-red);"></i> เวลาทำการ</h3>
+                    <h3><i class="fa-regular fa-clock" style="color: var(--primary-red);"></i> เวลาทำการและข้อมูลเชิงลึก</h3>
                     <div id="detail-hours" class="hours-list"></div>
+                    <div id="detail-features" class="detail-features-tags"></div>
                 </div>
 
+                <!-- S2-01: เพิ่มข้อมูลเมนูแนะนำ พร้อมรูปภาพและช่วงราคา -->
                 <div class="info-box">
-                    <h3><i class="fa-solid fa-utensils" style="color: var(--primary-red);"></i> เมนูยอดฮิต</h3>
+                    <h3><i class="fa-solid fa-utensils" style="color: var(--primary-red);"></i> เมนูแนะนำและจุดเด่นร้าน</h3>
                     <p id="detail-description" class="desc" style="margin-bottom: 15px;"></p>
                     <div id="detail-menu" class="popular-menu-grid"></div>
                 </div>
 
+                <!-- S2-02: ระบบส่งรีวิวและอัปเดตแบบ Real-time (DOM Update & คำนวณดาวเฉลี่ยทันที) -->
                 <div class="info-box">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h3 style="margin:0;"><i class="fa-regular fa-star" style="color: var(--primary-red);"></i> รีวิวจากนักศึกษา</h3>
-                        <a href="review.html" class="btn-primary-red" style="padding: 6px 14px; font-size: 13px; text-decoration: none; display: inline-block;">เขียนรีวิว</a>
+                        <a href="review.html" id="detail-write-review-btn" class="btn-primary-red" style="padding: 6px 14px; font-size: 13px; text-decoration: none; display: inline-block;">หน้ารีวิวแบบเต็ม</a>
                     </div>
+
+                    <div class="review-summary-banner">
+                        <div class="review-summary-score">
+                            <span id="detail-reviews-avg" class="review-score-number">0.0</span>
+                            <div>
+                                <div id="detail-reviews-stars" style="color: var(--accent-gold); font-size: 14px;">⭐⭐⭐⭐⭐</div>
+                                <small id="detail-reviews-count-label" style="color: var(--text-muted); font-size: 12px;">จาก 0 รีวิว</small>
+                            </div>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-bolt" style="color: var(--accent-gold);"></i> อัปเดตคะแนนแบบ Real-time</span>
+                    </div>
+
+                    <!-- ฟอร์มส่งรีวิวด่วนแบบ Real-time บนหน้า detail.html -->
+                    <form id="detail-quick-review-form" style="margin-bottom: 18px; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--input-bg);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--text-main);">ร่วมให้คะแนนและรีวิวร้านนี้ทันที:</label>
+                            <div class="star-rating-input" style="margin-bottom: 0; font-size: 20px;">
+                                <input type="radio" id="qstar5" name="qrating" value="5"><label for="qstar5" class="fa-solid fa-star" title="5 ดาว"></label>
+                                <input type="radio" id="qstar4" name="qrating" value="4"><label for="qstar4" class="fa-solid fa-star" title="4 ดาว"></label>
+                                <input type="radio" id="qstar3" name="qrating" value="3"><label for="qstar3" class="fa-solid fa-star" title="3 ดาว"></label>
+                                <input type="radio" id="qstar2" name="qrating" value="2"><label for="qstar2" class="fa-solid fa-star" title="2 ดาว"></label>
+                                <input type="radio" id="qstar1" name="qrating" value="1"><label for="qstar1" class="fa-solid fa-star" title="1 ดาว"></label>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" id="detail-quick-reviewer" placeholder="ชื่อผู้รีวิว (เช่น นักศึกษา มธ.)" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-main); font-size: 13px;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="detail-quick-comment" placeholder="เขียนรีวิวของคุณที่นี่... (แสดงผลทันทีโดยไม่ต้องกด Refresh)" style="flex: 1; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-main); font-size: 13px;">
+                            <button type="submit" id="detail-quick-submit-btn" class="btn-primary-red" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;">ส่งรีวิว</button>
+                        </div>
+                    </form>
 
                     <div id="detail-reviews-content"></div>
 
                     <div style="text-align: center; margin-top: 15px;">
-                        <a href="review.html" style="color: var(--primary-red); font-size: 14px; font-weight: bold; text-decoration: underline;">ดูรีวิวทั้งหมดและให้คะแนน (124) →</a>
+                        <a href="review.html" id="detail-reviews-total-link" style="color: var(--primary-red); font-size: 14px; font-weight: bold; text-decoration: underline;">ดูรีวิวทั้งหมดและแนบรูปภาพ →</a>
                     </div>
                 </div>
             </div>
 
             <div>
                 <div class="info-box" style="position: sticky; top: 20px;">
-                    <h3><i class="fa-solid fa-location-dot" style="color: var(--primary-red);"></i> ที่ตั้ง</h3>
-                    <p id="detail-location" style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;"></p>
+                    <h3><i class="fa-solid fa-location-dot" style="color: var(--primary-red);"></i> ข้อมูลร้านค้าและที่ตั้ง</h3>
                     
-                    <div style="width: 100%; height: 220px; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border-color);">
+                    <!-- S2-01: แสดงที่อยู่, เบอร์โทรศัพท์, และช่วงราคา ($/$$/$$$) อย่างชัดเจน -->
+                    <div class="detail-info-list">
+                        <div class="detail-info-row">
+                            <i class="fa-solid fa-map-pin"></i>
+                            <span class="detail-info-label">ที่อยู่:</span>
+                            <span id="detail-location" style="color: var(--text-main);">กำลังโหลด...</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <i class="fa-solid fa-phone"></i>
+                            <span class="detail-info-label">เบอร์โทรศัพท์:</span>
+                            <span id="detail-phone" style="color: var(--text-main);">กำลังโหลด...</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <i class="fa-solid fa-tags"></i>
+                            <span class="detail-info-label">ช่วงราคา:</span>
+                            <span id="detail-price-info" style="font-weight: 700; color: var(--accent-gold);">กำลังโหลด...</span>
+                        </div>
+                    </div>
+                    
+                    <div style="width: 100%; height: 220px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border-color);">
                         <iframe id="detail-map"
                             src="about:blank"
                             width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
                         </iframe>
                     </div>
+
+                    <a id="detail-gmap-link" href="#" target="_blank" rel="noopener" style="display: block; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 13px; font-weight: 600;">
+                        <i class="fa-solid fa-location-arrow" style="color: var(--primary-red);"></i> เปิดพิกัดใน Google Maps
+                    </a>
 
                     <a href="review.html" class="btn-primary-red" style="display: block; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; padding: 12px;">เขียนรีวิว / ดูรีวิวทั้งหมด</a>
                 </div>

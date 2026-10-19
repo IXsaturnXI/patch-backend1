@@ -21,7 +21,7 @@
         <div class="header-right">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="ค้นหาร้านอร่อย...">
+                <input type="text" placeholder="ค้นหาร้านอร่อย, เมนูแนะนำ, ที่อยู่...">
             </div>
             <button id="darkModeToggle" class="theme-toggle-btn" title="สลับโหมดสว่าง/มืด">
                 <i class="fa-solid fa-moon"></i>
@@ -64,13 +64,13 @@
                 <label class="quick-filter-check"><input type="checkbox" id="filter-rating"> <span>4 ดาวขึ้นไป</span></label>
                 <div class="quick-filter-divider"></div>
                 <div class="price-filter-heading">
-                    <span>ช่วงราคา</span>
+                    <span>ช่วงราคา ($/$$/$$$)</span>
                     <span class="price-filter-hint">เลือกได้หลายระดับ</span>
                 </div>
                 <div class="price-btn-group" role="group" aria-label="กรองตามช่วงราคา">
-                    <button class="price-btn" type="button" data-price="$" aria-pressed="false">$</button>
-                    <button class="price-btn" type="button" data-price="$$" aria-pressed="false">$$</button>
-                    <button class="price-btn" type="button" data-price="$$$" aria-pressed="false">$$$</button>
+                    <button class="price-btn" type="button" data-price="$" aria-pressed="false" title="ประหยัด (< 100฿)">$</button>
+                    <button class="price-btn" type="button" data-price="$$" aria-pressed="false" title="ปานกลาง (100-250฿)">$$</button>
+                    <button class="price-btn" type="button" data-price="$$$" aria-pressed="false" title="พรีเมียม (> 250฿)">$$$</button>
                 </div>
                 <button class="reset-btn" type="button">ล้างตัวกรอง</button>
             </section>
@@ -80,7 +80,7 @@
             <div class="content-header">
                 <div>
                     <h2>ค้นหาร้านอร่อย</h2>
-                    <p class="subtitle" style="color: var(--text-muted); font-size: 13px;">แสดงร้านค้าและสถานที่รอบ มธ. รังสิต</p>
+                    <p id="search-result-subtitle" class="subtitle" style="color: var(--text-muted); font-size: 13px;">แสดงร้านค้าและสถานที่รอบ มธ. รังสิต พร้อมเมนูแนะนำ ช่วงราคา เบอร์โทร และที่อยู่</p>
                 </div>
                 <div class="sort-dropdown">
                     <label>เรียงโดย:</label>
