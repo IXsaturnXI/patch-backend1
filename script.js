@@ -225,6 +225,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return s;
     }
 
+    // Store status is self-contained. Times use the visitor's local clock; an
+    // end time earlier than the start time represents overnight business hours.
+    function getLiveStoreStatus(place, now = new Date()) {
+        const toMinutes = (value) => {
+            const match = cleanTextValue(value).match(/^(\d{1,2}):(\d{2})$/);
+            if (!match) return null;
+            const hours = Number(match[1]);
+            const minutes = Number(match[2]);
+            return hours < 24 && minutes < 60 ? (hours * 60) + minutes : null;
+        };
+        const openAt = toMinutes(place.open || place.open_time || place.opening_time);
+        const closeAt = toMinutes(place.close || place.close_time || place.closing_time);
+
+        if (openAt !== null && closeAt !== null) {
+            const currentTime = (now.getHours() * 60) + now.getMinutes();
+            const isOpen = openAt === closeAt
+                ? true // Same times represent a 24-hour business.
+                : closeAt > openAt
+                    ? currentTime >= openAt && currentTime < closeAt
+                    : currentTime >= openAt || currentTime < closeAt;
+            return { isOpen, hasHours: true };
+        }
+        if (openAt !== null) {
+            const currentTime = (now.getHours() * 60) + now.getMinutes();
+            return { isOpen: currentTime >= openAt && currentTime <= (22 * 60), hasHours: true };
+        }
+        if (typeof place.is_open === 'boolean') return { isOpen: place.is_open, hasHours: false };
+        const declaredStatus = String(place.status || '').trim().toLowerCase();
+        if (declaredStatus.includes('ปิด') || declaredStatus.includes('closed')) return { isOpen: false, hasHours: false };
+        return { isOpen: true, hasHours: false };
+    }
+
     // เลือกรูปค่ากลางที่ตรงกับประเภทร้านและชื่อร้านนั้นๆ (ใช้เฉพาะกรณีที่ร้านไม่มีรูปจาก Google Maps หรือลิงก์รูปเสีย)
     function getRelevantFallbackImage(placeOrId) {
         if (typeof placeOrId !== 'object' || placeOrId === null) {
@@ -940,33 +972,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.search-box input').forEach(inp => { inp.value = initialQ; });
         }
 
-        const timeToMinutes = (value) => {
-            if (typeof value !== 'string') return null;
-            const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
-            if (!match) return null;
-            const hours = Number(match[1]);
-            const minutes = Number(match[2]);
-            return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
-        };
-
-        const getStoreOpenStatus = (place, now = new Date()) => {
-            const openAt = timeToMinutes(place.open || place.open_time || place.opening_time);
-            const closeAt = timeToMinutes(place.close || place.close_time || place.closing_time);
-            if (openAt !== null && closeAt !== null) {
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-                if (openAt === closeAt) return true;
-                return closeAt > openAt ? currentTime >= openAt && currentTime < closeAt : currentTime >= openAt || currentTime < closeAt;
-            }
-            if (openAt !== null && closeAt === null) {
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-                return currentTime >= openAt && currentTime <= 22 * 60;
-            }
-            if (typeof place.is_open === 'boolean') return place.is_open;
-            const declaredStatus = String(place.status || '').trim().toLowerCase();
-            if (declaredStatus.includes('เปิด') || declaredStatus.includes('open')) return true;
-            return true;
-        };
-
         const getHaversineDistance = (coords1, coords2) => {
             const toRad = x => (x * Math.PI) / 180;
             const R = 6371;
@@ -1046,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     rating,
                     review_count: reviewCount,
                     computed_distance: computedDistance !== undefined ? computedDistance : 999,
-                    currently_open: getStoreOpenStatus(place)
+                    currently_open: getLiveStoreStatus(place).isOpen
                 };
             });
 
@@ -1194,6 +1199,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadBtn) loadBtn.addEventListener('click', () => { displayLimit += 6; renderPlaces(); });
 
         getUserLocation().then(() => fetchFilteredPlaces());
+
+        // Refresh at every minute boundary to keep cards, filters, and ordering
+        // current without a full page refresh.
+        const scheduleStoreStatusRefresh = () => {
+            const millisecondsToNextMinute = 60000 - (Date.now() % 60000) + 20;
+            setTimeout(() => {
+                fetchFilteredPlaces();
+                setInterval(fetchFilteredPlaces, 60000);
+            }, millisecondsToNextMinute);
+        };
+        scheduleStoreStatusRefresh();
     }
 
     // ==========================================
@@ -1616,14 +1632,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceBadge = document.getElementById('detail-price-badge');
         if (priceBadge) priceBadge.textContent = priceInfo.fullLabel;
 
-        // ตรวจสอบเวลาเปิด-ปิด
+        // Real-time open/closed indicator. The shared helper supports overnight
+        // hours and is refreshed at each local minute boundary below.
         const openTime = cleanTextValue(place.open || place.open_time);
         const closeTime = cleanTextValue(place.close || place.close_time);
         const openBadge = document.getElementById('detail-open-badge');
-        if (openBadge) {
-            openBadge.textContent = openTime ? `🕒 เปิด ${openTime}${closeTime && closeTime !== '0:00' ? ' - ' + closeTime : ''} น.` : '🕒 เปิดทำการทุกวัน';
-            openBadge.className = 'detail-meta-pill status-open';
-        }
+        const updateDetailStoreStatus = () => {
+            const status = getLiveStoreStatus(place);
+            const statusText = status.isOpen ? 'Open' : 'Closed';
+            if (openBadge) {
+                openBadge.textContent = `● ${statusText}`;
+                openBadge.className = `detail-meta-pill ${status.isOpen ? 'status-open' : 'status-closed'}`;
+                openBadge.setAttribute('aria-label', `Store status: ${statusText}`);
+            }
+            const liveStatusRow = document.getElementById('detail-live-store-status');
+            if (liveStatusRow) {
+                liveStatusRow.innerHTML = `<span>สถานะปัจจุบัน</span><span class="detail-live-status ${status.isOpen ? 'is-open' : 'is-closed'}">${statusText}</span>`;
+            }
+        };
 
         // S2-01: ข้อมูลที่อยู่ เบอร์โทรศัพท์ และช่วงราคา ($/$$/$$$)
         const locElement = document.getElementById('detail-location');
@@ -1653,6 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hoursContainer) {
             const openClose = place.open_close || place['open-close'];
             let hoursHTML = '';
+            hoursHTML += '<div id="detail-live-store-status" class="hours-row detail-live-store-status" aria-live="polite"></div>';
             if (openTime && closeTime && closeTime !== '0:00') {
                 hoursHTML += `<div class="hours-row"><span>เวลาเปิด - ปิด (ทุกวัน)</span><span style="font-weight: bold; color: var(--text-main);">${openTime} - ${closeTime} น.</span></div>`;
             } else if (openTime) {
@@ -1666,6 +1693,12 @@ document.addEventListener('DOMContentLoaded', () => {
             hoursHTML += `<div class="hours-row"><span>เบอร์ติดต่อร้านค้า</span><span style="font-weight: bold; color: var(--text-main);">${phoneText}</span></div>`;
             hoursContainer.innerHTML = hoursHTML;
         }
+        updateDetailStoreStatus();
+        const millisecondsToNextMinute = 60000 - (Date.now() % 60000) + 20;
+        setTimeout(() => {
+            updateDetailStoreStatus();
+            setInterval(updateDetailStoreStatus, 60000);
+        }, millisecondsToNextMinute);
 
         // จุดเด่นและสิ่งอำนวยความสะดวก (Features Tags)
         const featuresContainer = document.getElementById('detail-features');

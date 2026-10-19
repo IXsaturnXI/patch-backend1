@@ -1555,3 +1555,48 @@ html, body {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* ==========================================
+   Live store status + responsive store views
+   These selectors are scoped to search.html and detail.html so the additions
+   cannot alter layouts or components on other pages.
+   ========================================== */
+#detail-page .detail-live-store-status { align-items: center; }
+#detail-page .detail-live-status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+#detail-page .detail-live-status::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ''; }
+#detail-page .detail-live-status.is-open { background: #dcfce7; color: #166534; }
+#detail-page .detail-live-status.is-closed { background: #f1f3f5; color: #68707a; }
+#detail-page.dark-mode .detail-live-status.is-open { background: #14532d; color: #dcfce7; }
+#detail-page.dark-mode .detail-live-status.is-closed { background: #343a40; color: #d0d5da; }
+
+@media (max-width: 1024px) {
+    .search-page .container { gap: 18px; padding: 0 20px; }
+    .search-page .sidebar { flex-basis: 230px; width: 230px; min-width: 230px; max-width: 230px; }
+    .search-page .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #detail-page .detail-container { max-width: 920px; }
+    #detail-page .detail-grid { grid-template-columns: minmax(0, 1fr); }
+    #detail-page .detail-grid > div:last-child .info-box { position: static !important; }
+}
+
+@media (max-width: 700px) {
+    .search-page .navbar, #detail-page .navbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+    .search-page .nav-links, #detail-page .nav-links { order: 3; display: flex; width: 100%; overflow-x: auto; white-space: nowrap; }
+    .search-page .nav-links a, #detail-page .nav-links a { flex: 0 0 auto; margin: 0 10px; }
+    .search-page .header-right { gap: 8px; min-width: 0; }
+    .search-page .search-box { min-width: 0; max-width: 170px; padding: 7px 10px; }
+    .search-page .search-box input { min-width: 0; width: 120px; }
+    .search-page .container { flex-direction: column; margin: 16px auto; padding: 0 14px; }
+    .search-page .sidebar { flex: 1 1 auto; width: 100%; min-width: 0; max-width: 100%; }
+    .search-page .card-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .search-page .content-header { align-items: flex-start; }
+    .search-page .sort-dropdown { width: 100%; }
+    #detail-page .detail-container { margin-top: 16px; padding: 0 14px; }
+    #detail-page .detail-cover { height: min(58vw, 300px); min-height: 235px; }
+    #detail-page .detail-cover-overlay { padding: 18px; }
+    #detail-page .detail-cover-badges { gap: 5px; }
+    #detail-page .detail-meta-pill { font-size: 10px; padding: 4px 7px; }
+    #detail-page .detail-grid { gap: 16px; }
+    #detail-page .info-box { padding: 16px; margin-bottom: 16px; }
+    #detail-page .hours-row { gap: 10px; align-items: flex-start; }
+    #detail-page .hours-row > span:last-child { text-align: right; }
+}
