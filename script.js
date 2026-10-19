@@ -216,7 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
         'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800',
         'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800',
         'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800'
+        'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&q=80&w=800'
     ];
 
     function cleanTextValue(val) {
@@ -237,9 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (url.includes('instagram.com/') || url.includes('tiktok.com/') || url.includes('facebook.com/') || url.includes('wongnai.com/restaurants/')) {
             return fallback;
         }
-        // อัปเกรดขนาดรูปภาพของ GoogleUserContent (เช่น =w122-h92-k-no -> =w1000-h750-k-no)
-        if (url.includes('googleusercontent.com')) {
-            return url.replace(/=w\d+-h\d+[^&]*/, '=w1000-h750-k-no');
+        // คงพารามิเตอร์ต้นฉบับสำหรับ gps-cs-s เพื่อไม่ให้ลายเซ็น URL เสีย
+        if (url.includes('googleusercontent.com') && !url.includes('gps-cs-s')) {
+            return url.replace(/=w\d+-h\d+[^&]*/, '=w800-h600-k-no');
         }
         if (url.includes('streetviewpixels-pa.googleapis.com')) {
             return url.replace(/w=\d+&h=\d+/, 'w=800&h=600');
@@ -712,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceInfo = getPriceDisplayInfo(place);
         const { rating, reviewCount } = getEffectivePlaceRatingAndCount(place);
         const imgUrl = resolveHighResImage(place.image_url, place.id);
-        const fallbackImg = FALLBACK_FOOD_IMAGES[0];
+        const fallbackImg = FALLBACK_FOOD_IMAGES[Math.abs(Number(place.id) || 1) % FALLBACK_FOOD_IMAGES.length];
         const addressText = getPlaceAddress(place);
         const phoneText = getPlacePhone(place);
         const menus = getPlaceRecommendedMenus(place);
@@ -734,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="detail.html?id=${place.id}" style="text-decoration: none; color: inherit;">
                     <div class="card">
                         <div class="card-image">
-                            <img src="${imgUrl}" alt="${place.name}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                            <img src="${imgUrl}" alt="${place.name}" referrerpolicy="no-referrer" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             <span class="badge badge-rating">★ ${rating} (${reviewCount})</span>
                             <span class="badge badge-price-tier">${priceInfo.symbol}</span>
                             ${badgeDiscountHTML}
