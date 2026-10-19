@@ -53,9 +53,9 @@
                     <label for="random-price">งบประมาณ</label>
                     <select id="random-price">
                         <option value="all">ทุกระดับราคา</option>
-                        <option value="$">$ (ประหยัด &lt; 80฿)</option>
-                        <option value="$$">$$ (ปานกลาง 80-200฿)</option>
-                        <option value="$$$">$$$ (ราคาสูง 200฿+)</option>
+                        <option value="$">$ (ประหยัด &lt; 100฿)</option>
+                        <option value="$$">$$ (ปานกลาง 100-250฿)</option>
+                        <option value="$$$">$$$ (พรีเมียม 250฿+)</option>
                     </select>
                 </div>
             </div>
@@ -91,6 +91,13 @@
         </div>
 
         <button class="btn-random" id="btnRandom"><i class="fa-solid fa-dice"></i> สุ่มเลย!</button>
+
+        <!-- S2-03: แสดงการแจ้งเตือนการบันทึกประวัติการสุ่มและลิงก์ไปหน้า Profile -->
+        <div style="margin-top: 25px;">
+            <a href="profile.html" style="font-size: 13px; color: var(--text-muted); text-decoration: underline;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-red);"></i> ดูประวัติการสุ่มร้านค้าย้อนหลังทั้งหมดในหน้าโปรไฟล์ (<span id="random-page-history-count">0</span> รายการ)
+            </a>
+        </div>
     </div>
 
     <footer class="footer">
@@ -99,6 +106,5 @@
     </footer>
 
     <script src="script.js"></script>
-    <script src="random.js"></script>
 </body>
 </html>

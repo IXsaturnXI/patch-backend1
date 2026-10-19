@@ -12,9 +12,9 @@
     <header class="navbar">
         <div class="logo">TU Aroi</div>
         <nav class="nav-links">
-            <a href="search.html">ค้นพบ</a>
+            <a href="search.html" class="active">ค้นพบ</a>
             <a href="profile.html">บันทึกไว้</a>
-            <a href="events.html" class="active">กิจกรรม</a>
+            <a href="events.html">กิจกรรม</a>
             <a href="map.html">แผนที่วิทยาเขต</a>
             <a href="random.html" class="nav-random">สุ่มดวง</a>
         </nav>
@@ -23,16 +23,20 @@
                 <i class="fa-solid fa-moon"></i>
             </button>
             <a href="profile.html"><i class="fa-regular fa-user icon-btn"></i></a>
+            <a href="login.html" class="btn-primary-red" style="padding: 6px 14px; font-size: 13px;">เข้าสู่ระบบ</a>
         </div>
     </header>
 
     <div class="detail-container">
         <a href="detail.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> กลับไปหน้ารายละเอียดร้าน</a>
 
+        <!-- S2-02: ส่วนแสดงชื่อร้านและคะแนนดาวเฉลี่ยที่คำนวณใหม่แบบ Real-time ทันทีที่มีการรีวิว -->
         <div style="margin-bottom: 25px;">
-            <h1 style="font-size: 26px; color: var(--text-main);">The Study Hub (เดอะ เดลี่ แกรนด์ คาเฟ่)</h1>
-            <p style="color: var(--text-muted); margin-top: 4px;">
-                <span style="color: var(--accent-gold); font-weight: bold;">⭐ 4.8</span> (124 รีวิว)
+            <h1 id="review-place-title" style="font-size: 26px; color: var(--text-main);">กำลังโหลดชื่อร้านค้า...</h1>
+            <p style="color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="review-page-rating" style="color: var(--accent-gold); font-weight: bold; font-size: 18px;">⭐ 0.0</span>
+                <span id="review-page-count">(0 รีวิว)</span>
+                <span id="review-page-price" style="color: var(--text-muted); font-size: 13px;"></span>
             </p>
         </div>
 
@@ -40,18 +44,21 @@
             <div class="info-box">
                 <h3>เขียนรีวิว</h3>
                 <form id="review-form">
+                    <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">ชื่อผู้รีวิว:</label>
+                    <input type="text" id="reviewer-name" placeholder="ชื่อของคุณ (ดึงอัตโนมัติหากเข้าสู่ระบบ)" style="width: 100%; padding: 10px 14px; margin-bottom: 14px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 10px; font-size: 13.5px;">
+
                     <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">ให้คะแนนสถานที่:</label>
                     
                     <div class="star-rating-input">
-                        <input type="radio" id="star5" name="rating" value="5"><label for="star5" class="fa-solid fa-star"></label>
-                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" class="fa-solid fa-star"></label>
-                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" class="fa-solid fa-star"></label>
-                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" class="fa-solid fa-star"></label>
-                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" class="fa-solid fa-star"></label>
+                        <input type="radio" id="star5" name="rating" value="5"><label for="star5" class="fa-solid fa-star" title="5 ดาว"></label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" class="fa-solid fa-star" title="4 ดาว"></label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" class="fa-solid fa-star" title="3 ดาว"></label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" class="fa-solid fa-star" title="2 ดาว"></label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" class="fa-solid fa-star" title="1 ดาว"></label>
                     </div>
 
                     <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">ความคิดเห็น:</label>
-                    <textarea id="review-comment" class="review-textarea" placeholder="บอกเล่าประสบการณ์ของคุณที่นี่..."></textarea>
+                    <textarea id="review-comment" class="review-textarea" placeholder="บอกเล่าประสบการณ์ เมนูเด็ด หรือบรรยากาศของร้านนี้..."></textarea>
 
                     <label style="display: block; font-size: 13px; color: var(--text-muted); margin-top: 15px; margin-bottom: 6px;">แนบรูปภาพ (ถ้ามี):</label>
                     <label for="review-photo" class="file-upload-box" style="display: block;">
@@ -67,7 +74,10 @@
             </div>
 
             <div class="info-box" id="reviews-list-container">
-                <h3>รีวิวล่าสุด</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">รีวิวล่าสุด</h3>
+                    <span id="reviews-live-badge" style="font-size: 12px; color: var(--accent-gold); font-weight: 600;"><i class="fa-solid fa-circle-check"></i> อัปเดตทันที (Real-time DOM)</span>
+                </div>
                 <div id="reviews-content-area"></div>
             </div>
         </div>
